@@ -167,4 +167,67 @@ func testSPMC(t *testing.T, caps Capability, ctor func() Queue) {
 	})
 }
 
-func testMPMC(t *testing.T, caps Capability, ctor func() Queue) {}
+func testMPMC(t *testing.T, caps Capability, ctor func() Queue) {
+	t.Run("SendRecv", func(t *testing.T) {
+		for _, count := range TestCount {
+			q := ctor().(MPMC)
+			ProducerConsumer(t,
+				TestProcs, 0,
+				func(id int) error {
+					latest := make([]Value, TestProcs)
+					for i := 0; i < count; i++ {
+						if !q.Send(Value(id)<<32 | Value(i+1)) {
+							return fmt.Errorf("failed to send %v", i)
+						}
+
+						var val Value
+						if !q.Recv(&val) {
+							return fmt.Errorf("failed to get")
+						}
+
+						id, got := int(val>>32), val&0xFFFFFFFF
+						exp := latest[id]
+						latest[id] = got
+
+						if val <= exp {
+							return fmt.Errorf("expected larger %v got %v", exp, got)
+						}
+					}
+					return nil
+				}, nil)
+		}
+	})
+
+	t.Run("Basic", func(t *testing.T) {
+		for _, count := range TestCount {
+			q := ctor().(MPMC)
+			ProducerConsumer(t,
+				TestProcs, TestProcs,
+				func(id int) error {
+					for i := 0; i < count; i++ {
+						if !q.Send(Value(id)<<32 | Value(i+1)) {
+							return fmt.Errorf("failed to send %v", i)
+						}
+					}
+					FlushSend(q)
+					return nil
+				}, func(id int) error {
+					latest := make([]Value, TestProcs)
+					for i := 0; i < count; i++ {
+						var val Value
+						if !q.Recv(&val) {
+							return fmt.Errorf("failed to get")
+						}
+
+						id, got := val>>32, val&0xFFFFFFFF
+						exp := latest[id]
+						latest[id] = got
+						if got <= exp {
+							return fmt.Errorf("invalid order got %v, expected %v", got, exp)
+						}
+					}
+					return nil
+				})
+		}
+	})
+}

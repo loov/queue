@@ -26,6 +26,8 @@ func FlushRecv(q Queue) {
 }
 
 func ProducerConsumer(t *testing.T, NP, NC int, producer, consumer func(id int) error) {
+	t.Helper()
+
 	var wg sync.WaitGroup
 	wg.Add(NP + NC)
 
