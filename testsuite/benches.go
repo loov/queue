@@ -200,3 +200,46 @@ func benchMPMC(b *testing.B, caps Capability, ctor func() Queue) {
 		})
 	}
 }
+
+func benchNonblockSPSC(b *testing.B, caps Capability, ctor func() NonblockingSPSC) {
+	b.Run("Single", func(b *testing.B) {
+		q := ctor().(NonblockingSPSC)
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			var v Value
+			q.TrySend(v)
+			q.TryRecv(&v)
+		}
+	})
+
+	b.Run("Uncontended/x100", func(b *testing.B) {
+		b.RunParallel(func(pb *testing.PB) {
+			q := ctor().(NonblockingSPSC)
+			for pb.Next() {
+				var v Value
+				for i := 0; i < 100; i++ {
+					q.TrySend(v)
+					q.TryRecv(&v)
+				}
+			}
+		})
+	})
+}
+
+func benchNonblockMPSC(b *testing.B, caps Capability, ctor func() NonblockingMPSC) { b.Skip("todo") }
+func benchNonblockSPMC(b *testing.B, caps Capability, ctor func() NonblockingSPMC) { b.Skip("todo") }
+
+func benchNonblockMPMC(b *testing.B, caps Capability, ctor func() NonblockingMPMC) {
+	b.Run("Contended/x100", func(b *testing.B) {
+		q := ctor().(NonblockingMPMC)
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				var v Value
+				for i := 0; i < 100; i++ {
+					q.TrySend(v)
+					q.TryRecv(&v)
+				}
+			}
+		})
+	})
+}

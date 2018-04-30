@@ -80,4 +80,17 @@ func Benchmarks(b *testing.B, ctor func() Queue) {
 	if caps.Has(CapBlockMPMC) {
 		b.Run("MPMC", func(b *testing.B) { b.Helper(); benchMPMC(b, caps, ctor) })
 	}
+
+	if caps.Has(CapNonblockSPSC) {
+		b.Run("n/SPSC", func(b *testing.B) { b.Helper(); benchNonblockSPSC(b, caps, ctor) })
+	}
+	if caps.Has(CapNonblockMPSC) {
+		b.Run("n/MPSC", func(b *testing.B) { b.Helper(); benchNonblockMPSC(b, caps, ctor) })
+	}
+	if caps.Has(CapNonblockSPMC) {
+		b.Run("n/SPMC", func(b *testing.B) { b.Helper(); benchNonblockSPMC(b, caps, ctor) })
+	}
+	if caps.Has(CapNonblockMPMC) {
+		b.Run("n/MPMC", func(b *testing.B) { b.Helper(); benchNonblockMPMC(b, caps, ctor) })
+	}
 }
