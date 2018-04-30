@@ -201,7 +201,7 @@ func benchMPMC(b *testing.B, caps Capability, ctor func() Queue) {
 	}
 }
 
-func benchNonblockSPSC(b *testing.B, caps Capability, ctor func() NonblockingSPSC) {
+func benchNonblockSPSC(b *testing.B, caps Capability, ctor func() Queue) {
 	b.Run("Single", func(b *testing.B) {
 		q := ctor().(NonblockingSPSC)
 		b.ResetTimer()
@@ -226,10 +226,10 @@ func benchNonblockSPSC(b *testing.B, caps Capability, ctor func() NonblockingSPS
 	})
 }
 
-func benchNonblockMPSC(b *testing.B, caps Capability, ctor func() NonblockingMPSC) { b.Skip("todo") }
-func benchNonblockSPMC(b *testing.B, caps Capability, ctor func() NonblockingSPMC) { b.Skip("todo") }
+func benchNonblockMPSC(b *testing.B, caps Capability, ctor func() Queue) { b.Skip("todo") }
+func benchNonblockSPMC(b *testing.B, caps Capability, ctor func() Queue) { b.Skip("todo") }
 
-func benchNonblockMPMC(b *testing.B, caps Capability, ctor func() NonblockingMPMC) {
+func benchNonblockMPMC(b *testing.B, caps Capability, ctor func() Queue) {
 	b.Run("Contended/x100", func(b *testing.B) {
 		q := ctor().(NonblockingMPMC)
 		b.RunParallel(func(pb *testing.PB) {

@@ -231,3 +231,201 @@ func testMPMC(t *testing.T, caps Capability, ctor func() Queue) {
 		}
 	})
 }
+
+func testNonblockSPSC(t *testing.T, caps Capability, ctor func() Queue) {
+	t.Run("Single", func(t *testing.T) {
+		for _, count := range TestCount {
+			q := ctor().(NonblockingSPSC)
+			for i := 0; i < count; i++ {
+				exp := Value(i)
+				if !q.TrySend(exp) {
+					t.Fatalf("send failed")
+				}
+				var got Value
+				if !q.TryRecv(&got) {
+					t.Fatalf("recv failed")
+				}
+				if exp != got {
+					t.Fatalf("expected %v got %v", exp, got)
+				}
+			}
+		}
+	})
+
+	t.Run("Basic", func(t *testing.T) {
+		for _, count := range TestCount {
+			q := ctor().(NonblockingSPSC)
+			ProducerConsumer(t,
+				1, 1,
+				func(id int) error {
+					for i := 0; i < count; i++ {
+						if !MustSendIn(q, Value(i+1), time.Microsecond) {
+							return fmt.Errorf("failed to send %v", i)
+						}
+					}
+					FlushSend(q)
+					return nil
+				},
+				func(id int) error {
+					for i := 0; i < count; i++ {
+						exp := Value(i + 1)
+
+						var got Value
+						if !MustRecvIn(q, &got, time.Microsecond) {
+							return fmt.Errorf("recv timed out")
+						}
+
+						if got != exp {
+							return fmt.Errorf("invalid value got %v, expected %v", got, exp)
+						}
+					}
+					return nil
+				})
+		}
+	})
+
+	if caps.Has(CapBounded) {
+		t.Run("NonblockOnFull", func(t *testing.T) {
+			q := ctor().(NonblockingSPSC)
+			capacity := Cap(q)
+			for i := 0; i < capacity; i++ {
+				if !q.TrySend(0) {
+					t.Fatal("failed to send")
+				}
+			}
+			FlushSend(q)
+			if q.TrySend(0) {
+				t.Fatal("send succeeded")
+			}
+			FlushSend(q)
+		})
+	}
+}
+
+func testNonblockMPSC(t *testing.T, caps Capability, ctor func() Queue) {}
+func testNonblockSPMC(t *testing.T, caps Capability, ctor func() Queue) {}
+func testNonblockMPMC(t *testing.T, caps Capability, ctor func() Queue) {}
+
+/*
+func testNonblockMPSC(t *testing.T, caps Capability, ctor func() Queue) {
+	t.Run("Basic", func(t *testing.T) {
+		for _, size := range TestSizes {
+			q := ctor(size)
+			count := Value(size/2) + 1
+
+			result := async.All(func() error {
+				return async.SpawnWithResult(TestProcs, func(id int) error {
+					for i := Value(0); i < count; i++ {
+						if !mustSend(q, Value(id)<<32|i) {
+							return fmt.Errorf("%v: failed to send %v", size, i)
+						}
+					}
+					flushsend(q)
+					return nil
+				}).WaitError()
+			}, func() error {
+				var exps [TestProcs]Value
+				for i := Value(0); i < count*TestProcs; i++ {
+					var val Value
+					if !mustRecv(q, &val) {
+						return fmt.Errorf("%v: failed to get", size)
+					}
+					id, got := val>>32, val&0xFFFFFFFF
+					exp := exps[id]
+					exps[id]++
+					if got != exp {
+						return fmt.Errorf("%v: invalid order got %v, expected %v", size, got, exp)
+					}
+				}
+				return nil
+			})
+
+			if errs := result.Wait(); errs != nil {
+				t.Fatal(errs)
+			}
+		}
+	})
+}
+func testNonblockSPMC(t *testing.T, caps Capability, ctor func() Queue) {
+	t.Run("Basic", func(t *testing.T) {
+		for _, size := range TestSizes {
+			q := ctor(size)
+			count := Value(size/2) + 1
+
+			result := async.All(func() error {
+				for i := Value(0); i < count*TestProcs; i++ {
+					if !mustSend(q, i) {
+						return fmt.Errorf("%v: failed to send %v", size, i)
+					}
+				}
+				flushsend(q)
+				return nil
+			}, func() error {
+				return async.SpawnWithResult(TestProcs, func(int) error {
+					var lastexp Value = -1
+					for i := Value(0); i < count; i++ {
+						var got Value
+						if !mustRecv(q, &got) {
+							return fmt.Errorf("%v: failed to get", size)
+						}
+						exp := lastexp
+						lastexp = got
+						if got <= exp {
+							return fmt.Errorf("%v: invalid order got %v, expected %v", size, got, exp)
+						}
+					}
+					return nil
+				}).WaitError()
+			})
+
+			if errs := result.Wait(); errs != nil {
+				t.Fatal(errs)
+			}
+		}
+	})
+}
+func testNonblockMPMC(t *testing.T, caps Capability, ctor func() Queue) {
+	t.Run("Basic", func(t *testing.T) {
+		for _, size := range TestSizes {
+			q := ctor(size)
+			count := Value(size/2) + 1
+
+			result := async.All(func() error {
+				return async.SpawnWithResult(TestProcs, func(id int) error {
+					for i := Value(0); i < count; i++ {
+						if !mustSend(q, Value(id)<<32|i) {
+							return fmt.Errorf("%v: failed to send %v", size, i)
+						}
+					}
+					flushsend(q)
+					return nil
+				}).WaitError()
+			}, func() error {
+				return async.SpawnWithResult(TestProcs, func(int) error {
+					var exps [TestProcs]Value
+					for i := range exps {
+						exps[i] = -1
+					}
+					for i := Value(0); i < count; i++ {
+						var val Value
+						if !mustRecv(q, &val) {
+							return fmt.Errorf("%v: failed to get", size)
+						}
+						id, got := val>>32, val&0xFFFFFFFF
+						exp := exps[id]
+						exps[id] = got
+						if got <= exp {
+							return fmt.Errorf("%v: invalid order got %v, expected %v", size, got, exp)
+						}
+					}
+					return nil
+				}).WaitError()
+			})
+
+			if errs := result.Wait(); errs != nil {
+				t.Fatal(errs)
+			}
+		}
+	})
+}
+*/

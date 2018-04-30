@@ -40,22 +40,43 @@ func Tests(t *testing.T, ctor func() Queue) {
 
 	if caps.Has(CapBlockSPSC) {
 		for i := 0; i < *shake; i++ {
-			t.Run("SPSC", func(t *testing.T) { t.Helper(); testSPSC(t, caps, ctor) })
+			t.Run("b/SPSC", func(t *testing.T) { t.Helper(); testSPSC(t, caps, ctor) })
 		}
 	}
 	if caps.Has(CapBlockMPSC) {
 		for i := 0; i < *shake; i++ {
-			t.Run("MPSC", func(t *testing.T) { t.Helper(); testMPSC(t, caps, ctor) })
+			t.Run("b/MPSC", func(t *testing.T) { t.Helper(); testMPSC(t, caps, ctor) })
 		}
 	}
 	if caps.Has(CapBlockSPMC) {
 		for i := 0; i < *shake; i++ {
-			t.Run("SPMC", func(t *testing.T) { t.Helper(); testSPMC(t, caps, ctor) })
+			t.Run("b/SPMC", func(t *testing.T) { t.Helper(); testSPMC(t, caps, ctor) })
 		}
 	}
 	if caps.Has(CapBlockMPMC) {
 		for i := 0; i < *shake; i++ {
-			t.Run("MPMC", func(t *testing.T) { t.Helper(); testMPMC(t, caps, ctor) })
+			t.Run("b/MPMC", func(t *testing.T) { t.Helper(); testMPMC(t, caps, ctor) })
+		}
+	}
+
+	if caps.Has(CapNonblockSPSC) {
+		for i := 0; i < *shake; i++ {
+			t.Run("n/SPSC", func(t *testing.T) { t.Helper(); testNonblockSPSC(t, caps, ctor) })
+		}
+	}
+	if caps.Has(CapNonblockMPSC) {
+		for i := 0; i < *shake; i++ {
+			t.Run("n/MPSC", func(t *testing.T) { t.Helper(); testNonblockMPSC(t, caps, ctor) })
+		}
+	}
+	if caps.Has(CapNonblockSPMC) {
+		for i := 0; i < *shake; i++ {
+			t.Run("n/SPMC", func(t *testing.T) { t.Helper(); testNonblockSPMC(t, caps, ctor) })
+		}
+	}
+	if caps.Has(CapNonblockMPMC) {
+		for i := 0; i < *shake; i++ {
+			t.Run("n/MPMC", func(t *testing.T) { t.Helper(); testNonblockMPMC(t, caps, ctor) })
 		}
 	}
 }
@@ -68,18 +89,22 @@ func Benchmarks(b *testing.B, ctor func() Queue) {
 	}
 	b.Helper()
 
+	// blocking implementations
+
 	if caps.Has(CapBlockSPSC) {
-		b.Run("SPSC", func(b *testing.B) { b.Helper(); benchSPSC(b, caps, ctor) })
+		b.Run("b/SPSC", func(b *testing.B) { b.Helper(); benchSPSC(b, caps, ctor) })
 	}
 	if caps.Has(CapBlockMPSC) {
-		b.Run("MPSC", func(b *testing.B) { b.Helper(); benchMPSC(b, caps, ctor) })
+		b.Run("b/MPSC", func(b *testing.B) { b.Helper(); benchMPSC(b, caps, ctor) })
 	}
 	if caps.Has(CapBlockSPMC) {
-		b.Run("SPMC", func(b *testing.B) { b.Helper(); benchSPMC(b, caps, ctor) })
+		b.Run("b/SPMC", func(b *testing.B) { b.Helper(); benchSPMC(b, caps, ctor) })
 	}
 	if caps.Has(CapBlockMPMC) {
-		b.Run("MPMC", func(b *testing.B) { b.Helper(); benchMPMC(b, caps, ctor) })
+		b.Run("b/MPMC", func(b *testing.B) { b.Helper(); benchMPMC(b, caps, ctor) })
 	}
+
+	// non-blocking implementations
 
 	if caps.Has(CapNonblockSPSC) {
 		b.Run("n/SPSC", func(b *testing.B) { b.Helper(); benchNonblockSPSC(b, caps, ctor) })

@@ -2,8 +2,10 @@ package testsuite
 
 import (
 	"fmt"
+	"runtime"
 	"sync"
 	"testing"
+	"time"
 )
 
 // LocalWork simulates work
@@ -36,6 +38,50 @@ func FlushRecv(q Queue) {
 	if flusher, ok := q.(Flusher); ok {
 		flusher.FlushRecv()
 	}
+}
+
+func MustSendIn(q NonblockingSPSC, v Value, dur time.Duration) bool {
+	if q.TrySend(v) {
+		return true
+	}
+
+	start := time.Now()
+	for try := 0; ; try++ {
+		if q.TrySend(v) {
+			return true
+		}
+
+		if try > 256 {
+			try = 0
+			runtime.Gosched()
+			if time.Since(start) > dur {
+				return false
+			}
+		}
+	}
+	return false
+}
+
+func MustRecvIn(q NonblockingSPSC, v *Value, dur time.Duration) bool {
+	if q.TryRecv(v) {
+		return true
+	}
+
+	start := time.Now()
+	for try := 0; ; try++ {
+		if q.TryRecv(v) {
+			return true
+		}
+
+		if try > 256 {
+			try = 0
+			runtime.Gosched()
+			if time.Since(start) > dur {
+				return false
+			}
+		}
+	}
+	return false
 }
 
 func ProducerConsumer(t *testing.T, NP, NC int, producer, consumer func(id int) error) {
