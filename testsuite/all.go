@@ -10,17 +10,19 @@ var NonblockThreshold = time.Second / 8
 
 var TestProcs = 16
 
-var TestSizes = [...]int{
+var BatchSizes = []int{1, 4, 8, 16}
+var TestSizes = []int{
 	1, 2, 3,
 	7, 8, 9,
 	15, 16, 17,
 	127, 128, 129,
 	8191, 8192, 8193,
 }
-var BenchSizes = [...]int{8, 64, 8192}
-var BenchWork = [...]int{0}
 
-var TestCount = [...]int{
+var BenchSizes = []int{8, 64, 8192}
+var BenchWork = []int{0}
+
+var TestCount = []int{
 	1, 2, 3,
 	7, 8, 9,
 	15, 16, 17,
