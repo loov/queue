@@ -45,8 +45,7 @@ var Impls = []Impl{
 type Flag int
 
 const (
-	Broken = Flag(1 << iota)
-	Unbounded
+	Unbounded = Flag(1 << iota)
 	Batched
 	Blocking
 	Nonblocking
@@ -86,7 +85,6 @@ func (impl *Impl) New() string {
 	return "New" + impl.Name + "()"
 }
 
-func (impl *Impl) Broken() bool      { return impl.Flags&Broken == Broken }
 func (impl *Impl) Bounded() bool     { return !impl.Unbounded() }
 func (impl *Impl) Unbounded() bool   { return impl.Flags&Unbounded == Unbounded }
 func (impl *Impl) Batched() bool     { return impl.Flags&Batched == Batched }
@@ -135,18 +133,7 @@ const T = `package queue
 import (
 	"testing"
 	"strconv"
-	"flag"
 )
-
-var _ = strconv.Itoa
-var runbroken = flag.Bool("broken", false, "run only broken implementations")
-
-func broken(t *testing.T) {
-	t.Helper()
-	if !*runbroken {
-		t.Skip("broken")
-	}
-}
 
 {{ range . }}
 {{ $impl := . }}
@@ -156,8 +143,6 @@ var _ {{ . }} = (*{{$impl.Name}})(nil)
 {{ end }}
 
 func Test{{.Name}}(t *testing.T) {
-	{{- if .Broken -}} broken(t); {{- end -}}
-	
 	{{- if .Batched -}}
 	for _, batchSize := range BatchSizes {
 	{{- else -}}
@@ -179,8 +164,6 @@ func Test{{.Name}}(t *testing.T) {
 }
 
 func Benchmark{{.Name}}(b *testing.B) {
-	{{- if .Broken -}} b.Skip("broken"); {{- end -}}
-
 	{{- if .Batched -}}
 	for _, batchSize := range BatchSizes {
 	{{- else -}}

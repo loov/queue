@@ -5,20 +5,9 @@ package queue
 //go:generate go run all_gen.go -out all_test.go
 
 import (
-	"flag"
 	"strconv"
 	"testing"
 )
-
-var _ = strconv.Itoa
-var runbroken = flag.Bool("broken", false, "run only broken implementations")
-
-func broken(t *testing.T) {
-	t.Helper()
-	if !*runbroken {
-		t.Skip("broken")
-	}
-}
 
 var _ MPMC = (*MPMCc_go)(nil)
 var _ NonblockingMPMC = (*MPMCc_go)(nil)
