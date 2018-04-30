@@ -1,8 +1,12 @@
 package queue
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 var TestProcs = 16
+
 var TestSizes = [...]int{
 	1, 2, 3,
 	7, 8, 9,
@@ -10,6 +14,8 @@ var TestSizes = [...]int{
 	127, 128, 129,
 	8191, 8192, 8193,
 }
+var BenchSizes = [...]int{8, 64, 8192}
+
 var TestCount = [...]int{
 	1, 2, 3,
 	7, 8, 9,
@@ -18,80 +24,34 @@ var TestCount = [...]int{
 	8191, 8192, 8193,
 }
 
-type Capability uint64
-
-func (caps *Capability) Add(cap Capability)     { *caps |= cap }
-func (caps Capability) Any(cap Capability) bool { return caps&cap != 0 }
-func (caps Capability) Has(cap Capability) bool { return caps&cap == cap }
-
-const (
-	IsBlockSPSC = Capability(1 << iota)
-	IsBlockMPSC
-	IsBlockSPMC
-	IsNonblockSPSC
-	IsNonblockMPSC
-	IsNonblockSPMC
-	IsBounded
-	// BatchReceiver
-
-	IsBlockMPMC    = IsBlockMPSC | IsBlockSPMC
-	IsNonblockMPMC = IsNonblockMPSC | IsNonblockSPMC
-
-	AnyQueue = IsBlockMPMC | IsNonblockMPMC
-)
-
-func Detect(q Queue) Capability {
-	var caps Capability
-	if _, ok := q.(SPSC); ok {
-		caps.Add(IsBlockSPSC)
-	}
-	if _, ok := q.(MPSC); ok {
-		caps.Add(IsBlockMPSC)
-	}
-	if _, ok := q.(SPMC); ok {
-		caps.Add(IsBlockSPMC)
-	}
-	if _, ok := q.(NonblockingSPSC); ok {
-		caps.Add(IsNonblockSPSC)
-	}
-	if _, ok := q.(NonblockingMPSC); ok {
-		caps.Add(IsNonblockMPSC)
-	}
-	if _, ok := q.(NonblockingSPMC); ok {
-		caps.Add(IsNonblockSPMC)
-	}
-	if _, ok := q.(Bounded); ok {
-		caps.Add(IsBounded)
-	}
-	return caps
-}
-
-// RunTest runs queue tests for queues
-func RunTest(t *testing.T, ctor func() Queue) {
-	caps := Detect(ctor())
-	if !caps.Any(AnyQueue) {
+// RunTests runs queue tests for queues
+func RunTests(t *testing.T, ctor func() Queue) {
+	q := ctor()
+	caps := Detect(q)
+	fmt.Printf("%T: %v\n", q, caps)
+	if !caps.Any(CapQueue) {
 		t.Fatal("does not implement any of queue interfaces")
 	}
 	t.Helper()
 
-	if caps.Has(IsBlockSPSC) {
+	if caps.Has(CapBlockSPSC) {
 		t.Run("SPSC", func(t *testing.T) { t.Helper(); testSPSC(t, ctor) })
 	}
-	if caps.Has(IsBlockMPSC) {
+	if caps.Has(CapBlockMPSC) {
 		t.Run("MPSC", func(t *testing.T) { t.Helper(); testMPSC(t, ctor) })
 	}
-	if caps.Has(IsBlockSPMC) {
+	if caps.Has(CapBlockSPMC) {
 		t.Run("SPMC", func(t *testing.T) { t.Helper(); testSPMC(t, ctor) })
 	}
-	if caps.Has(IsBlockMPMC) {
+	if caps.Has(CapBlockMPMC) {
 		t.Run("MPMC", func(t *testing.T) { t.Helper(); testMPMC(t, ctor) })
 	}
 }
 
-// RunBenchmark runs queue benchmarks for queues
-func RunBenchmark(b *testing.B, ctor func() Queue) {
+// RunBenchmarks runs queue benchmarks for queues
+func RunBenchmarks(b *testing.B, ctor func() Queue) {
 	caps := Detect(ctor())
-	if !caps.Any(AnyQueue) {
+	if !caps.Any(CapQueue) {
 		b.Fatal("does not implement any of queue interfaces")
 	}
 	b.Helper()
