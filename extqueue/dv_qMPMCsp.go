@@ -47,8 +47,7 @@ func (q *MPMCqspDV) MultipleProducers() {}
 
 // Send sends a value to the queue and blocks when it is full
 func (q *MPMCqspDV) Send(v Value) bool {
-	var s spinT256
-	for s.Spin() {
+	for wait := 0; ; spin(&wait) {
 		if q.TrySend(v) {
 			return true
 		}
@@ -83,8 +82,7 @@ func (q *MPMCqspDV) TrySend(v Value) bool {
 
 // Recv receives a value from the queue and blocks when it is empty
 func (q *MPMCqspDV) Recv(v *Value) bool {
-	var s spinT256
-	for s.Spin() {
+	for wait := 0; ; spin(&wait) {
 		if q.TryRecv(v) {
 			return true
 		}

@@ -45,8 +45,7 @@ func (q *SPSCnsDV) TrySend(value Value) bool { return q.Send(value) }
 
 // Recv receives a value from the queue and blocks when it is empty
 func (q *SPSCnsDV) Recv(value *Value) bool {
-	var s spinT256
-	for s.Spin() {
+	for wait := 0; ; spin(&wait) {
 		if q.TryRecv(value) {
 			return true
 		}

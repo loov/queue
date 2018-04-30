@@ -46,8 +46,7 @@ func (q *SPMCqsDV) MultipleConsumers() {}
 
 // Send sends a value to the queue and blocks when it is full
 func (q *SPMCqsDV) Send(v Value) bool {
-	var s spinT256
-	for s.Spin() {
+	for wait := 0; ; spin(&wait) {
 		if q.TrySend(v) {
 			return true
 		}
@@ -79,8 +78,7 @@ func (q *SPMCqsDV) TrySend(v Value) bool {
 
 // Recv receives a value from the queue and blocks when it is empty
 func (q *SPMCqsDV) Recv(v *Value) bool {
-	var s spinT256
-	for s.Spin() {
+	for wait := 0; ; spin(&wait) {
 		if q.TryRecv(v) {
 			return true
 		}

@@ -43,8 +43,7 @@ func (q *SPSCqsDV) Cap() int { return len(q.buffer) }
 
 // Send sends a value to the queue and blocks when it is full
 func (q *SPSCqsDV) Send(v Value) bool {
-	var s spinT256
-	for s.Spin() {
+	for wait := 0; ; spin(&wait) {
 		if q.TrySend(v) {
 			return true
 		}
@@ -76,8 +75,7 @@ func (q *SPSCqsDV) TrySend(v Value) bool {
 
 // Recv receives a value from the queue and blocks when it is empty
 func (q *SPSCqsDV) Recv(v *Value) bool {
-	var s spinT256
-	for s.Spin() {
+	for wait := 0; ; spin(&wait) {
 		if q.TryRecv(v) {
 			return true
 		}
