@@ -1,4 +1,4 @@
-package queue
+package testsuite
 
 type Value = int64
 

@@ -1,4 +1,4 @@
-package queue
+package testsuite
 
 import (
 	"flag"
@@ -26,8 +26,8 @@ var TestCount = [...]int{
 
 var shake = flag.Int("shake", 1, "run tests multiple times")
 
-// RunTests runs queue tests for queues
-func RunTests(t *testing.T, ctor func() Queue) {
+// Tests runs queue tests for queues
+func Tests(t *testing.T, ctor func() Queue) {
 	q := ctor()
 	caps := Detect(q)
 	if !caps.Any(CapQueue) {
@@ -59,8 +59,8 @@ func RunTests(t *testing.T, ctor func() Queue) {
 	}
 }
 
-// RunBenchmarks runs queue benchmarks for queues
-func RunBenchmarks(b *testing.B, ctor func() Queue) {
+// Benchmarks runs queue benchmarks for queues
+func Benchmarks(b *testing.B, ctor func() Queue) {
 	caps := Detect(ctor())
 	if !caps.Any(CapQueue) {
 		b.Fatal("does not implement any of queue interfaces")

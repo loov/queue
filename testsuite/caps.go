@@ -1,4 +1,4 @@
-package queue
+package testsuite
 
 import (
 	"strings"

@@ -32,14 +32,6 @@ var Impls = []Impl{
 	{"SPMCqsp_dv", Blocking | Nonblocking},
 	{"SPSCqs_dv", Blocking | Nonblocking},
 	{"SPSCqsp_dv", Blocking | Nonblocking},
-
-	// onering implementations
-	// {"SPSCrs_one", Blocking},
-	// {"SPMCrs_one", Blocking},
-	// {"MPSCrs_one", Blocking},
-
-	// fastlane implementation
-	// {"MPSCnw_fl", Blocking | Unbounded},
 }
 
 type Flag int
@@ -133,6 +125,8 @@ const T = `package queue
 import (
 	"testing"
 	"strconv"
+
+	"github.com/loov/queue/testsuite"
 )
 
 {{ range . }}
@@ -144,17 +138,17 @@ var _ {{ . }} = (*{{$impl.Name}})(nil)
 
 func Test{{.Name}}(t *testing.T) {
 	{{- if .Batched -}}
-	for _, batchSize := range BatchSizes {
+	for _, batchSize := range testsuite.BatchSizes {
 	{{- else -}}
 	batchSize := 0;
 	{{- end -}}
 		{{- if .Bounded -}}
-		for _, size := range TestSizes {
+		for _, size := range testsuite.TestSizes {
 		{{- else -}}
 		size := 0;
 		{{- end -}}
 			name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-			t.Run(name, func(t *testing.T){ RunTests(t, func() Queue { return {{.New}} }) })
+			t.Run(name, func(t *testing.T){ testsuite.Tests(t, func() testsuite.Queue { return {{.New}} }) })
 		{{- if .Bounded -}}
 		}
 		{{- end -}}
@@ -165,17 +159,17 @@ func Test{{.Name}}(t *testing.T) {
 
 func Benchmark{{.Name}}(b *testing.B) {
 	{{- if .Batched -}}
-	for _, batchSize := range BatchSizes {
+	for _, batchSize := range testsuite.BatchSizes {
 	{{- else -}}
 	batchSize := 0;
 	{{- end -}}
 		{{- if .Bounded -}}
-		for _, size := range BenchSizes {
+		for _, size := range testsuite.BenchSizes {
 		{{- else -}}
 		size := 0;
 		{{- end -}}
 			name := strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-			b.Run(name, func(b *testing.B){ RunBenchmarks(b, func() Queue { return {{.New}} }) })
+			b.Run(name, func(b *testing.B){ testsuite.Benchmarks(b, func() testsuite.Queue { return {{.New}} }) })
 		{{- if .Bounded -}}
 		}
 		{{- end -}}
