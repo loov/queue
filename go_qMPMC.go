@@ -5,12 +5,10 @@ import (
 	"sync/atomic"
 )
 
-// Based on https://docs.google.com/document/d/1yIAYmbvL3JxOKOjuCyon7JhW4cSv1wy5hC0ApeGMV9s/pub
-
 var _ MPMC = (*MPMCqGo)(nil)
 var _ NonblockingMPMC = (*MPMCqGo)(nil)
 
-// MPMCqGo is an lock-free MPMC based on Dvyukov lock-free channel design
+// MPMCqGo is an lock-free MPMC queue based on https://docs.google.com/document/d/1yIAYmbvL3JxOKOjuCyon7JhW4cSv1wy5hC0ApeGMV9s/pub
 type MPMCqGo struct {
 	sendx  uint64
 	_      [7]uint64

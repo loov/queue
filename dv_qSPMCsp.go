@@ -9,6 +9,8 @@ import (
 var _ SPMC = (*SPMCqspDV)(nil)
 
 // SPMCqspDV is a MPMC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
+//
+// This modifies the base algorithm by removing relevant atomic ops for Send
 type SPMCqspDV struct {
 	_ [8]int64
 
