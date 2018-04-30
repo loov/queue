@@ -2,8 +2,6 @@ package extqueue
 
 import (
 	"sync/atomic"
-
-	"github.com/egonelbre/exp/sync2/spin"
 )
 
 // MPMCqsDV is a MPMC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
@@ -49,7 +47,7 @@ func (q *MPMCqsDV) MultipleProducers() {}
 
 // Send sends a value to the queue and blocks when it is full
 func (q *MPMCqsDV) Send(v Value) bool {
-	var s spin.T256
+	var s spinT256
 	for s.Spin() {
 		if q.TrySend(v) {
 			return true
@@ -85,7 +83,7 @@ func (q *MPMCqsDV) TrySend(v Value) bool {
 
 // Recv receives a value from the queue and blocks when it is empty
 func (q *MPMCqsDV) Recv(v *Value) bool {
-	var s spin.T256
+	var s spinT256
 	for s.Spin() {
 		if q.TryRecv(v) {
 			return true

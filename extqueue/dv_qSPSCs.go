@@ -2,8 +2,6 @@ package extqueue
 
 import (
 	"sync/atomic"
-
-	"github.com/egonelbre/exp/sync2/spin"
 )
 
 // SPSCqsDV is a SPSC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
@@ -45,7 +43,7 @@ func (q *SPSCqsDV) Cap() int { return len(q.buffer) }
 
 // Send sends a value to the queue and blocks when it is full
 func (q *SPSCqsDV) Send(v Value) bool {
-	var s spin.T256
+	var s spinT256
 	for s.Spin() {
 		if q.TrySend(v) {
 			return true
@@ -78,7 +76,7 @@ func (q *SPSCqsDV) TrySend(v Value) bool {
 
 // Recv receives a value from the queue and blocks when it is empty
 func (q *SPSCqsDV) Recv(v *Value) bool {
-	var s spin.T256
+	var s spinT256
 	for s.Spin() {
 		if q.TryRecv(v) {
 			return true

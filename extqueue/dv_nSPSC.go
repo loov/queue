@@ -3,8 +3,6 @@ package extqueue
 import (
 	"sync/atomic"
 	"unsafe"
-
-	"github.com/egonelbre/exp/sync2/spin"
 )
 
 // SPSCnsDV is a SPSC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/unbounded-spsc-queue
@@ -47,7 +45,7 @@ func (q *SPSCnsDV) TrySend(value Value) bool { return q.Send(value) }
 
 // Recv receives a value from the queue and blocks when it is empty
 func (q *SPSCnsDV) Recv(value *Value) bool {
-	var s spin.T256
+	var s spinT256
 	for s.Spin() {
 		if q.TryRecv(value) {
 			return true
