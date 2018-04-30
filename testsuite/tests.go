@@ -259,7 +259,7 @@ func testNonblockSPSC(t *testing.T, caps Capability, ctor func() Queue) {
 				1, 1,
 				func(id int) error {
 					for i := 0; i < count; i++ {
-						if !MustSendIn(q, Value(i+1), time.Microsecond) {
+						if !MustSendIn(q, Value(i+1), NonblockThreshold) {
 							return fmt.Errorf("failed to send %v", i)
 						}
 					}
@@ -271,7 +271,7 @@ func testNonblockSPSC(t *testing.T, caps Capability, ctor func() Queue) {
 						exp := Value(i + 1)
 
 						var got Value
-						if !MustRecvIn(q, &got, time.Microsecond) {
+						if !MustRecvIn(q, &got, NonblockThreshold) {
 							return fmt.Errorf("recv timed out")
 						}
 
@@ -302,130 +302,135 @@ func testNonblockSPSC(t *testing.T, caps Capability, ctor func() Queue) {
 	}
 }
 
-func testNonblockMPSC(t *testing.T, caps Capability, ctor func() Queue) {}
-func testNonblockSPMC(t *testing.T, caps Capability, ctor func() Queue) {}
-func testNonblockMPMC(t *testing.T, caps Capability, ctor func() Queue) {}
-
-/*
 func testNonblockMPSC(t *testing.T, caps Capability, ctor func() Queue) {
 	t.Run("Basic", func(t *testing.T) {
-		for _, size := range TestSizes {
-			q := ctor(size)
-			count := Value(size/2) + 1
+		for _, count := range TestCount {
+			q := ctor().(NonblockingMPSC)
 
-			result := async.All(func() error {
-				return async.SpawnWithResult(TestProcs, func(id int) error {
-					for i := Value(0); i < count; i++ {
-						if !mustSend(q, Value(id)<<32|i) {
-							return fmt.Errorf("%v: failed to send %v", size, i)
+			ProducerConsumer(t,
+				TestProcs, 1,
+				func(id int) error {
+					for i := 0; i < count; i++ {
+						if !MustSendIn(q, Value(id)<<32|Value(i), NonblockThreshold) {
+							return fmt.Errorf("failed to send %v", i)
 						}
 					}
-					flushsend(q)
 					return nil
-				}).WaitError()
-			}, func() error {
-				var exps [TestProcs]Value
-				for i := Value(0); i < count*TestProcs; i++ {
-					var val Value
-					if !mustRecv(q, &val) {
-						return fmt.Errorf("%v: failed to get", size)
+				}, func(int) error {
+					exps := make([]Value, TestProcs)
+					for i := 0; i < count*TestProcs; i++ {
+						var val Value
+						if !MustRecvIn(q, &val, NonblockThreshold) {
+							return fmt.Errorf("failed to get")
+						}
+						id, got := val>>32, val&0xFFFFFFFF
+						exp := exps[id]
+						exps[id]++
+						if exp != got {
+							return fmt.Errorf("invalid order got %v, expected %v", got, exp)
+						}
 					}
-					id, got := val>>32, val&0xFFFFFFFF
-					exp := exps[id]
-					exps[id]++
-					if got != exp {
-						return fmt.Errorf("%v: invalid order got %v, expected %v", size, got, exp)
-					}
-				}
-				return nil
-			})
-
-			if errs := result.Wait(); errs != nil {
-				t.Fatal(errs)
-			}
+					return nil
+				})
 		}
 	})
 }
+
 func testNonblockSPMC(t *testing.T, caps Capability, ctor func() Queue) {
 	t.Run("Basic", func(t *testing.T) {
-		for _, size := range TestSizes {
-			q := ctor(size)
-			count := Value(size/2) + 1
+		for _, count := range TestCount {
+			q := ctor().(NonblockingSPMC)
 
-			result := async.All(func() error {
-				for i := Value(0); i < count*TestProcs; i++ {
-					if !mustSend(q, i) {
-						return fmt.Errorf("%v: failed to send %v", size, i)
+			ProducerConsumer(t,
+				1, TestProcs,
+				func(int) error {
+					for i := 0; i < count*TestProcs; i++ {
+						if !MustSendIn(q, Value(i+1), NonblockThreshold) {
+							return fmt.Errorf("failed to send %v", i)
+						}
 					}
-				}
-				flushsend(q)
-				return nil
-			}, func() error {
-				return async.SpawnWithResult(TestProcs, func(int) error {
-					var lastexp Value = -1
-					for i := Value(0); i < count; i++ {
+					FlushSend(q)
+					return nil
+				}, func(int) error {
+					var lastexp Value
+					for i := 0; i < count; i++ {
 						var got Value
-						if !mustRecv(q, &got) {
-							return fmt.Errorf("%v: failed to get", size)
+						if !MustRecvIn(q, &got, NonblockThreshold) {
+							return fmt.Errorf("failed to get")
 						}
 						exp := lastexp
 						lastexp = got
 						if got <= exp {
-							return fmt.Errorf("%v: invalid order got %v, expected %v", size, got, exp)
+							return fmt.Errorf("invalid order got %v, expected at least %v", got, exp)
 						}
 					}
 					return nil
-				}).WaitError()
-			})
-
-			if errs := result.Wait(); errs != nil {
-				t.Fatal(errs)
-			}
+				})
 		}
 	})
 }
+
 func testNonblockMPMC(t *testing.T, caps Capability, ctor func() Queue) {
-	t.Run("Basic", func(t *testing.T) {
-		for _, size := range TestSizes {
-			q := ctor(size)
-			count := Value(size/2) + 1
-
-			result := async.All(func() error {
-				return async.SpawnWithResult(TestProcs, func(id int) error {
-					for i := Value(0); i < count; i++ {
-						if !mustSend(q, Value(id)<<32|i) {
-							return fmt.Errorf("%v: failed to send %v", size, i)
+	t.Run("SendRecv", func(t *testing.T) {
+		for _, count := range TestCount {
+			q := ctor().(NonblockingMPMC)
+			ProducerConsumer(t,
+				TestProcs, 0,
+				func(id int) error {
+					latest := make([]Value, TestProcs)
+					for i := 0; i < count; i++ {
+						if !MustSendIn(q, Value(id)<<32|Value(i+1), NonblockThreshold) {
+							return fmt.Errorf("failed to send %v", i)
 						}
-					}
-					flushsend(q)
-					return nil
-				}).WaitError()
-			}, func() error {
-				return async.SpawnWithResult(TestProcs, func(int) error {
-					var exps [TestProcs]Value
-					for i := range exps {
-						exps[i] = -1
-					}
-					for i := Value(0); i < count; i++ {
+
 						var val Value
-						if !mustRecv(q, &val) {
-							return fmt.Errorf("%v: failed to get", size)
+						if !MustRecvIn(q, &val, NonblockThreshold) {
+							return fmt.Errorf("failed to get")
 						}
-						id, got := val>>32, val&0xFFFFFFFF
-						exp := exps[id]
-						exps[id] = got
-						if got <= exp {
-							return fmt.Errorf("%v: invalid order got %v, expected %v", size, got, exp)
+
+						id, got := int(val>>32), val&0xFFFFFFFF
+						exp := latest[id]
+						latest[id] = got
+
+						if val <= exp {
+							return fmt.Errorf("expected larger %v got %v", exp, got)
 						}
 					}
 					return nil
-				}).WaitError()
-			})
+				}, nil)
+		}
+	})
 
-			if errs := result.Wait(); errs != nil {
-				t.Fatal(errs)
-			}
+	t.Run("Basic", func(t *testing.T) {
+		for _, count := range TestCount {
+			q := ctor().(NonblockingMPMC)
+			ProducerConsumer(t,
+				TestProcs, TestProcs,
+				func(id int) error {
+					for i := 0; i < count; i++ {
+						if !MustSendIn(q, Value(id)<<32|Value(i+1), NonblockThreshold) {
+							return fmt.Errorf("failed to send %v", i)
+						}
+					}
+					FlushSend(q)
+					return nil
+				}, func(id int) error {
+					latest := make([]Value, TestProcs)
+					for i := 0; i < count; i++ {
+						var val Value
+						if !MustRecvIn(q, &val, NonblockThreshold) {
+							return fmt.Errorf("failed to get")
+						}
+
+						id, got := val>>32, val&0xFFFFFFFF
+						exp := latest[id]
+						latest[id] = got
+						if got <= exp {
+							return fmt.Errorf("invalid order got %v, expected %v", got, exp)
+						}
+					}
+					return nil
+				})
 		}
 	})
 }
-*/

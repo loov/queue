@@ -3,7 +3,10 @@ package testsuite
 import (
 	"flag"
 	"testing"
+	"time"
 )
+
+var NonblockThreshold = time.Second / 8
 
 var TestProcs = 16
 
