@@ -92,6 +92,8 @@ func Benchmarks(b *testing.B, ctor func() Queue) {
 	}
 	b.Helper()
 
+	benchCommon(b, caps, ctor)
+
 	// blocking implementations
 
 	if caps.Has(CapBlockSPSC) {
