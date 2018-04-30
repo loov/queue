@@ -15,6 +15,7 @@ var TestSizes = [...]int{
 	8191, 8192, 8193,
 }
 var BenchSizes = [...]int{8, 64, 8192}
+var BenchWork = [...]int{0}
 
 var TestCount = [...]int{
 	1, 2, 3,
