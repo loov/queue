@@ -1,6 +1,4 @@
-package queue
-
-var _ MPMC = (*MPMCcGo)(nil)
+package extqueue
 
 // MPMCcGo is a wrapper around go standard channel implementing Queue interfaces
 type MPMCcGo struct {

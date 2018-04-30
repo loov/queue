@@ -1,12 +1,10 @@
-package queue
+package extqueue
 
 import (
 	"sync/atomic"
 
 	"github.com/egonelbre/exp/sync2/spin"
 )
-
-var _ SPSC = (*SPSCqspDV)(nil)
 
 // SPSCqspDV is a SPSC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
 //

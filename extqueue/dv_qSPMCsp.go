@@ -1,4 +1,4 @@
-package queue
+package extqueue
 
 import (
 	"sync/atomic"
@@ -6,15 +6,13 @@ import (
 	"github.com/egonelbre/exp/sync2/spin"
 )
 
-var _ SPMC = (*SPMCqsDV)(nil)
-
-// SPMCqsDV is a MPMC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
+// SPMCqspDV is a MPMC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
 //
-// This modifies the base algorithm by removing relevant atomic ops for Recv
-type SPMCqsDV struct {
+// This modifies the base algorithm by removing relevant atomic ops for Send
+type SPMCqspDV struct {
 	_ [8]int64
 
-	buffer []seqValue
+	buffer []seqPaddedValue
 	mask   int64
 	_      [4]int64
 
@@ -25,15 +23,15 @@ type SPMCqsDV struct {
 	_     [7]int64
 }
 
-// NewSPMCqsDV creates a SPMCqsDV queue
-func NewSPMCqsDV(size int) *SPMCqsDV {
+// NewSPMCqspDV creates a new SPMCqspDV queue
+func NewSPMCqspDV(size int) *SPMCqspDV {
 	if size <= 1 {
 		size = 2
 	}
 	size = int(nextPowerOfTwo(uint32(size)))
 
-	q := &SPMCqsDV{}
-	q.buffer = make([]seqValue, size)
+	q := &SPMCqspDV{}
+	q.buffer = make([]seqPaddedValue, size)
 	q.mask = int64(size) - 1
 	for i := range q.buffer {
 		q.buffer[i].sequence = int64(i)
@@ -43,13 +41,13 @@ func NewSPMCqsDV(size int) *SPMCqsDV {
 }
 
 // Cap returns number of elements this queue can hold before blocking
-func (q *SPMCqsDV) Cap() int { return len(q.buffer) }
+func (q *SPMCqspDV) Cap() int { return len(q.buffer) }
 
 // MultipleConsumers makes this a MC queue
-func (q *SPMCqsDV) MultipleConsumers() {}
+func (q *SPMCqspDV) MultipleConsumers() {}
 
 // Send sends a value to the queue and blocks when it is full
-func (q *SPMCqsDV) Send(v Value) bool {
+func (q *SPMCqspDV) Send(v Value) bool {
 	var s spin.T256
 	for s.Spin() {
 		if q.TrySend(v) {
@@ -60,8 +58,8 @@ func (q *SPMCqsDV) Send(v Value) bool {
 }
 
 // TrySend tries to send a value to the queue and returns immediately when it is full
-func (q *SPMCqsDV) TrySend(v Value) bool {
-	var cell *seqValue
+func (q *SPMCqspDV) TrySend(v Value) bool {
+	var cell *seqPaddedValue
 	pos := q.sendx
 	for {
 		cell = &q.buffer[pos&q.mask]
@@ -82,7 +80,7 @@ func (q *SPMCqsDV) TrySend(v Value) bool {
 }
 
 // Recv receives a value from the queue and blocks when it is empty
-func (q *SPMCqsDV) Recv(v *Value) bool {
+func (q *SPMCqspDV) Recv(v *Value) bool {
 	var s spin.T256
 	for s.Spin() {
 		if q.TryRecv(v) {
@@ -93,8 +91,8 @@ func (q *SPMCqsDV) Recv(v *Value) bool {
 }
 
 // TryRecv receives a value from the queue and returns when it is empty
-func (q *SPMCqsDV) TryRecv(v *Value) bool {
-	var cell *seqValue
+func (q *SPMCqspDV) TryRecv(v *Value) bool {
+	var cell *seqPaddedValue
 	pos := atomic.LoadInt64(&q.recvx)
 	for {
 		cell = &q.buffer[pos&q.mask]

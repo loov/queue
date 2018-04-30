@@ -1,4 +1,4 @@
-package queue
+package extqueue
 
 import (
 	"sync/atomic"
@@ -6,12 +6,8 @@ import (
 	"github.com/egonelbre/exp/sync2/spin"
 )
 
-var _ SPSC = (*SPSCqsDV)(nil)
-
-// SPSCqsDV is a SPSC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
-//
-// This modifies the base algorithm by removing relevant atomic ops for Send and Recv
-type SPSCqsDV struct {
+// MPMCqsDV is a MPMC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
+type MPMCqsDV struct {
 	_ [8]int64
 
 	buffer []seqValue
@@ -25,14 +21,14 @@ type SPSCqsDV struct {
 	_     [7]int64
 }
 
-// NewSPSCqsDV creates a new SPSCqsDV queue
-func NewSPSCqsDV(size int) *SPSCqsDV {
+// NewMPMCqsDV creates a NewMPMCqsDV queue
+func NewMPMCqsDV(size int) *MPMCqsDV {
 	if size <= 1 {
 		size = 2
 	}
 	size = int(nextPowerOfTwo(uint32(size)))
 
-	q := &SPSCqsDV{}
+	q := &MPMCqsDV{}
 	q.buffer = make([]seqValue, size)
 	q.mask = int64(size) - 1
 	for i := range q.buffer {
@@ -43,10 +39,16 @@ func NewSPSCqsDV(size int) *SPSCqsDV {
 }
 
 // Cap returns number of elements this queue can hold before blocking
-func (q *SPSCqsDV) Cap() int { return len(q.buffer) }
+func (q *MPMCqsDV) Cap() int { return len(q.buffer) }
+
+// MultipleConsumers makes this a MC queue
+func (q *MPMCqsDV) MultipleConsumers() {}
+
+// MultipleProducers makes this a MP queue
+func (q *MPMCqsDV) MultipleProducers() {}
 
 // Send sends a value to the queue and blocks when it is full
-func (q *SPSCqsDV) Send(v Value) bool {
+func (q *MPMCqsDV) Send(v Value) bool {
 	var s spin.T256
 	for s.Spin() {
 		if q.TrySend(v) {
@@ -57,19 +59,22 @@ func (q *SPSCqsDV) Send(v Value) bool {
 }
 
 // TrySend tries to send a value to the queue and returns immediately when it is full
-func (q *SPSCqsDV) TrySend(v Value) bool {
+func (q *MPMCqsDV) TrySend(v Value) bool {
 	var cell *seqValue
-	pos := q.sendx
+	pos := atomic.LoadInt64(&q.sendx)
 	for {
 		cell = &q.buffer[pos&q.mask]
 		seq := atomic.LoadInt64(&cell.sequence)
 		df := seq - pos
 		if df == 0 {
-			q.sendx = pos + 1
-			break
+			if atomic.CompareAndSwapInt64(&q.sendx, pos, pos+1) {
+				break
+			}
 		} else if df < 0 {
 			// full
 			return false
+		} else {
+			pos = atomic.LoadInt64(&q.sendx)
 		}
 	}
 
@@ -79,7 +84,7 @@ func (q *SPSCqsDV) TrySend(v Value) bool {
 }
 
 // Recv receives a value from the queue and blocks when it is empty
-func (q *SPSCqsDV) Recv(v *Value) bool {
+func (q *MPMCqsDV) Recv(v *Value) bool {
 	var s spin.T256
 	for s.Spin() {
 		if q.TryRecv(v) {
@@ -89,20 +94,23 @@ func (q *SPSCqsDV) Recv(v *Value) bool {
 	return false
 }
 
-// TryRecv receives a value from the queue and returns when it is empty
-func (q *SPSCqsDV) TryRecv(v *Value) bool {
+// TryRecv receives a value from the queue and returns when it is full
+func (q *MPMCqsDV) TryRecv(v *Value) bool {
 	var cell *seqValue
-	pos := q.recvx
+	pos := atomic.LoadInt64(&q.recvx)
 	for {
 		cell = &q.buffer[pos&q.mask]
 		seq := atomic.LoadInt64(&cell.sequence)
 		df := seq - (pos + 1)
 		if df == 0 {
-			q.recvx = pos + 1
-			break
+			if atomic.CompareAndSwapInt64(&q.recvx, pos, pos+1) {
+				break
+			}
 		} else if df < 0 {
 			// empty
 			return false
+		} else {
+			pos = atomic.LoadInt64(&q.recvx)
 		}
 	}
 

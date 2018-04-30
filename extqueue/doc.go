@@ -1,4 +1,4 @@
-// Package queue contains many different concurrent queue algorithms and tests
+// Package extqueue contains many different concurrent queue algorithms, tests and benchmarks
 //
 // All names follow  a convention: "[SM]P[SM]C[sw]?i?p?[rnacq]<variant>""
 //
@@ -29,4 +29,4 @@
 //        special variant identifier for a particular implementation,
 //        which indicates either base implementation author / paper / code.
 //
-package queue
+package extqueue

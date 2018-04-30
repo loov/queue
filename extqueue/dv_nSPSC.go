@@ -1,4 +1,4 @@
-package queue
+package extqueue
 
 import (
 	"sync/atomic"
@@ -6,8 +6,6 @@ import (
 
 	"github.com/egonelbre/exp/sync2/spin"
 )
-
-var _ SPSC = (*SPSCnsDV)(nil)
 
 // SPSCnsDV is a SPSC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/unbounded-spsc-queue
 type SPSCnsDV struct {

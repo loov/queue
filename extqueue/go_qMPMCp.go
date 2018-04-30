@@ -1,4 +1,4 @@
-package queue
+package extqueue
 
 import (
 	"sync"

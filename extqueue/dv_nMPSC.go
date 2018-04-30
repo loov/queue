@@ -1,4 +1,4 @@
-package queue
+package extqueue
 
 import (
 	"sync/atomic"
@@ -6,8 +6,6 @@ import (
 
 	"github.com/egonelbre/exp/sync2/spin"
 )
-
-var _ MPSC = (*MPSCnsDV)(nil)
 
 // MPSCnsDV is a MPSC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
 type MPSCnsDV struct {
