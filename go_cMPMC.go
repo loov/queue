@@ -22,7 +22,6 @@ func (q *MPMCc_go) Send(v Value) bool {
 	case q.ch <- v:
 		return true
 	}
-	// return false
 }
 
 func (q *MPMCc_go) Recv(v *Value) bool {
@@ -31,7 +30,6 @@ func (q *MPMCc_go) Recv(v *Value) bool {
 		*v = x
 		return true
 	}
-	// return false
 }
 
 func (q *MPMCc_go) TrySend(v Value) bool {
