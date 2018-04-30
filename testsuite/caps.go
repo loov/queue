@@ -2,7 +2,6 @@ package testsuite
 
 import (
 	"strings"
-	"testing"
 )
 
 // Capability is bitflag for different queue capabilities
@@ -83,13 +82,4 @@ func Detect(q Queue) Capability {
 		caps.Add(CapBounded)
 	}
 	return caps
-}
-
-func TestCapability(t *testing.T) {
-	if !CapQueue.Any(CapQueue) {
-		t.Fatal("!CapQueue.Any(CapQueue)")
-	}
-	if !CapBlockSPSC.Any(CapQueue) {
-		t.Fatal("!CapBlockSPSC.Any(CapQueue)")
-	}
 }
