@@ -24,7 +24,7 @@ var Impls = []Impl{
 
 	{"SPSCns_dv", Blocking | Nonblocking | Unbounded},
 	{"MPSCns_dv", Blocking | Nonblocking | Unbounded},
-	{"MPSCnsi_dv", Blocking | Nonblocking | Unbounded},
+	// {"MPSCnsi_dv", Blocking | Nonblocking | Unbounded},
 
 	{"MPMCqs_dv", Blocking | Nonblocking},
 	{"MPMCqsp_dv", Blocking | Nonblocking},

@@ -111,23 +111,6 @@ func BenchmarkMPSCns_dv(b *testing.B) {
 	b.Run(name, func(b *testing.B) { RunBenchmarks(b, func() Queue { return NewMPSCns_dv() }) })
 }
 
-var _ MPSC = (*MPSCnsi_dv)(nil)
-var _ NonblockingMPSC = (*MPSCnsi_dv)(nil)
-
-func TestMPSCnsi_dv(t *testing.T) {
-	batchSize := 0
-	size := 0
-	name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-	t.Run(name, func(t *testing.T) { RunTests(t, func() Queue { return NewMPSCnsi_dv() }) })
-}
-
-func BenchmarkMPSCnsi_dv(b *testing.B) {
-	batchSize := 0
-	size := 0
-	name := strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-	b.Run(name, func(b *testing.B) { RunBenchmarks(b, func() Queue { return NewMPSCnsi_dv() }) })
-}
-
 var _ MPMC = (*MPMCqs_dv)(nil)
 var _ NonblockingMPMC = (*MPMCqs_dv)(nil)
 
