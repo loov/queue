@@ -25,13 +25,13 @@ func FlushRecv(q Queue) {
 	}
 }
 
-func Parallel(t *testing.T, fns ...func() error) {
+func ProducerConsumer(t *testing.T, NP, NC int, producer, consumer func(id int) error) {
 	var wg sync.WaitGroup
-	wg.Add(len(fns))
+	wg.Add(NP + NC)
 
-	errs := make(chan error, len(fns))
-	for i := 0; i < len(fns); i++ {
-		go func(fn func() error) {
+	errs := make(chan error, NP+NC)
+	for i := 0; i < NP+NC; i++ {
+		go func(id int) {
 			var err error
 
 			defer func() {
@@ -46,11 +46,15 @@ func Parallel(t *testing.T, fns ...func() error) {
 				errs <- err
 			}()
 
-			err = fn()
-		}(fns[i])
+			if id < NP {
+				err = producer(id)
+			} else {
+				err = consumer(id)
+			}
+		}(i)
 	}
 
-	for i := 0; i < len(fns); i++ {
+	for i := 0; i < NP+NC; i++ {
 		if err := <-errs; err != nil {
 			t.Fatal(err)
 		}

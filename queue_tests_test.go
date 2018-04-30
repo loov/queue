@@ -9,7 +9,7 @@ import (
 )
 
 func testSPSC(t *testing.T, caps Capability, ctor func() Queue) {
-	t.Run("SendRecv", func(t *testing.T) {
+	t.Run("Single", func(t *testing.T) {
 		for _, count := range TestCount {
 			q := ctor().(SPSC)
 			for i := 0; i < count; i++ {
@@ -24,11 +24,10 @@ func testSPSC(t *testing.T, caps Capability, ctor func() Queue) {
 		}
 	})
 
-	t.Run("Concurrent", func(t *testing.T) {
+	t.Run("Basic", func(t *testing.T) {
 		for _, count := range TestCount {
 			q := ctor().(SPSC)
-			fmt.Println(Cap(q))
-			Parallel(t, func() error {
+			ProducerConsumer(t, 1, 1, func(int) error {
 				for i := 0; i < count; i++ {
 					if !q.Send(Value(i + 1)) {
 						return fmt.Errorf("failed to send %v", i)
@@ -36,7 +35,7 @@ func testSPSC(t *testing.T, caps Capability, ctor func() Queue) {
 				}
 				FlushSend(q)
 				return nil
-			}, func() error {
+			}, func(int) error {
 				for i := 0; i < count; i++ {
 					exp := Value(i + 1)
 
@@ -102,8 +101,70 @@ func testSPSC(t *testing.T, caps Capability, ctor func() Queue) {
 	}
 }
 
-func testMPSC(t *testing.T, caps Capability, ctor func() Queue) {}
+func testMPSC(t *testing.T, caps Capability, ctor func() Queue) {
+	t.Run("Basic", func(t *testing.T) {
+		for _, count := range TestCount {
+			q := ctor().(MPSC)
+			ProducerConsumer(t,
+				TestProcs, 1,
+				func(id int) error {
+					for i := 0; i < count; i++ {
+						if !q.Send(Value(id)<<32 | Value(i)) {
+							return fmt.Errorf("failed to send %v", i)
+						}
+					}
+					return nil
+				}, func(int) error {
+					exps := make([]Value, TestProcs)
+					for i := 0; i < count*TestProcs; i++ {
+						var val Value
+						if !q.Recv(&val) {
+							return fmt.Errorf("failed to get")
+						}
+						id, got := val>>32, val&0xFFFFFFFF
+						exp := exps[id]
+						exps[id]++
+						if exp != got {
+							return fmt.Errorf("invalid order got %v, expected %v", got, exp)
+						}
+					}
+					return nil
+				})
+		}
+	})
+}
 
-func testSPMC(t *testing.T, caps Capability, ctor func() Queue) {}
+func testSPMC(t *testing.T, caps Capability, ctor func() Queue) {
+	t.Run("Basic", func(t *testing.T) {
+		for _, count := range TestCount {
+			q := ctor().(SPMC)
+			ProducerConsumer(t,
+				1, TestProcs,
+				func(int) error {
+					for i := 0; i < count*TestProcs; i++ {
+						if !q.Send(Value(i + 1)) {
+							return fmt.Errorf("failed to send %v", i)
+						}
+					}
+					FlushSend(q)
+					return nil
+				}, func(int) error {
+					var lastexp Value
+					for i := 0; i < count; i++ {
+						var got Value
+						if !q.Recv(&got) {
+							return fmt.Errorf("failed to get")
+						}
+						exp := lastexp
+						lastexp = got
+						if got <= exp {
+							return fmt.Errorf("invalid order got %v, expected at least %v", got, exp)
+						}
+					}
+					return nil
+				})
+		}
+	})
+}
 
 func testMPMC(t *testing.T, caps Capability, ctor func() Queue) {}
