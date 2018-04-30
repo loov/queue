@@ -1,3 +1,5 @@
+// +build external
+
 package queue
 
 import "github.com/tidwall/fastlane"

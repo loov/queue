@@ -5,7 +5,6 @@ import (
 	"testing"
 )
 
-var shake = flag.Int("shake", 1, "run tests multiple times")
 var TestProcs = 16
 
 var TestSizes = [...]int{
@@ -24,6 +23,8 @@ var TestCount = [...]int{
 	127, 128, 129,
 	8191, 8192, 8193,
 }
+
+var shake = flag.Int("shake", 1, "run tests multiple times")
 
 // RunTests runs queue tests for queues
 func RunTests(t *testing.T, ctor func() Queue) {

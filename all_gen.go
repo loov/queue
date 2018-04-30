@@ -34,12 +34,12 @@ var Impls = []Impl{
 	{"SPSCqsp_dv", Blocking | Nonblocking},
 
 	// onering implementations
-	{"SPSCrs_one", Blocking},
-	{"SPMCrs_one", Blocking},
-	{"MPSCrs_one", Blocking},
+	// {"SPSCrs_one", Blocking},
+	// {"SPMCrs_one", Blocking},
+	// {"MPSCrs_one", Blocking},
 
 	// fastlane implementation
-	{"MPSCnw_fl", Blocking | Unbounded},
+	// {"MPSCnw_fl", Blocking | Unbounded},
 }
 
 type Flag int
