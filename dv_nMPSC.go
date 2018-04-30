@@ -7,10 +7,10 @@ import (
 	"github.com/egonelbre/exp/sync2/spin"
 )
 
-var _ MPSC = (*MPSCns_dv)(nil)
+var _ MPSC = (*MPSCnsDV)(nil)
 
-// MPSCns_dv is a MPSC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
-type MPSCns_dv struct {
+// MPSCnsDV is a MPSC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
+type MPSCnsDV struct {
 	_    [8]uint64
 	stub Node
 	_    [7]uint64
@@ -20,19 +20,19 @@ type MPSCns_dv struct {
 	_    [7]uint64
 }
 
-// NewMPSCns_dv creates a MPSCns_dv queue
-func NewMPSCns_dv() *MPSCns_dv {
-	q := &MPSCns_dv{}
+// NewMPSCnsDV creates a MPSCnsDV queue
+func NewMPSCnsDV() *MPSCnsDV {
+	q := &MPSCnsDV{}
 	q.head = unsafe.Pointer(&q.stub)
 	q.tail = unsafe.Pointer(&q.stub)
 	return q
 }
 
 // MultipleProducers makes this a MP queue
-func (q *MPSCns_dv) MultipleProducers() {}
+func (q *MPSCnsDV) MultipleProducers() {}
 
 // Send sends a value to the queue, always suceeds
-func (q *MPSCns_dv) Send(value Value) bool {
+func (q *MPSCnsDV) Send(value Value) bool {
 	n := &Node{Value: value}
 	prev := atomic.SwapPointer(&q.head, unsafe.Pointer(n))
 	prevn := (*Node)(prev)
@@ -41,10 +41,10 @@ func (q *MPSCns_dv) Send(value Value) bool {
 }
 
 // TrySend sends a value to the queue, always suceeds
-func (q *MPSCns_dv) TrySend(value Value) bool { return q.Send(value) }
+func (q *MPSCnsDV) TrySend(value Value) bool { return q.Send(value) }
 
 // Recv receives a value from the queue and blocks when it is empty
-func (q *MPSCns_dv) Recv(value *Value) bool {
+func (q *MPSCnsDV) Recv(value *Value) bool {
 	var s spin.T256
 	for s.Spin() {
 		if q.TryRecv(value) {
@@ -55,7 +55,7 @@ func (q *MPSCns_dv) Recv(value *Value) bool {
 }
 
 // TryRecv receives a value from the queue and returns when it is empty
-func (q *MPSCns_dv) TryRecv(value *Value) bool {
+func (q *MPSCnsDV) TryRecv(value *Value) bool {
 	tail := (*Node)(q.tail)
 	next := atomic.LoadPointer(&tail.next)
 	if next == nil {

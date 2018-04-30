@@ -7,11 +7,11 @@ import (
 
 // Based on https://docs.google.com/document/d/1yIAYmbvL3JxOKOjuCyon7JhW4cSv1wy5hC0ApeGMV9s/pub
 
-var _ MPMC = (*MPMCq_go)(nil)
-var _ NonblockingMPMC = (*MPMCq_go)(nil)
+var _ MPMC = (*MPMCqGo)(nil)
+var _ NonblockingMPMC = (*MPMCqGo)(nil)
 
-// MPMCq_go is an lock-free MPMC based on Dvyukov lock-free channel design
-type MPMCq_go struct {
+// MPMCqGo is an lock-free MPMC based on Dvyukov lock-free channel design
+type MPMCqGo struct {
 	sendx  uint64
 	_      [7]uint64
 	recvx  uint64
@@ -23,15 +23,15 @@ type MPMCq_go struct {
 	recvq sync.Cond
 }
 
-// NewMPMCq_go creates a new MPMCq_go queue
-func NewMPMCq_go(size int) *MPMCq_go {
+// NewMPMCqGo creates a new MPMCqGo queue
+func NewMPMCqGo(size int) *MPMCqGo {
 	if size < 2 {
 		size = 2
 	}
-	q := &MPMCq_go{
+	q := &MPMCqGo{
 		sendx:  0,
 		recvx:  0,
-		buffer: make([]seqValue32, size, size),
+		buffer: make([]seqValue32, size),
 	}
 	q.sendq.L = &q.mu
 	q.recvq.L = &q.mu
@@ -39,29 +39,29 @@ func NewMPMCq_go(size int) *MPMCq_go {
 }
 
 // Cap returns number of elements this queue can hold before blocking
-func (q *MPMCq_go) Cap() int { return len(q.buffer) }
+func (q *MPMCqGo) Cap() int { return len(q.buffer) }
 
 // MultipleConsumers makes this a MC queue
-func (q *MPMCq_go) MultipleConsumers() {}
+func (q *MPMCqGo) MultipleConsumers() {}
 
 // MultipleProducers makes this a MP queue
-func (q *MPMCq_go) MultipleProducers() {}
+func (q *MPMCqGo) MultipleProducers() {}
 
-func (q *MPMCq_go) cap() uint32 { return uint32(len(q.buffer)) }
+func (q *MPMCqGo) cap() uint32 { return uint32(len(q.buffer)) }
 
 // Send sends a value to the queue and blocks when it is full
-func (q *MPMCq_go) Send(value Value) bool { return q.trySend(&value, true) }
+func (q *MPMCqGo) Send(value Value) bool { return q.trySend(&value, true) }
 
 // TrySend tries to send a value to the queue and returns immediately when it is full
-func (q *MPMCq_go) TrySend(value Value) bool { return q.trySend(&value, false) }
+func (q *MPMCqGo) TrySend(value Value) bool { return q.trySend(&value, false) }
 
 // Recv receives a value from the queue and blocks when it is empty
-func (q *MPMCq_go) Recv(value *Value) bool { return q.tryRecv(value, true) }
+func (q *MPMCqGo) Recv(value *Value) bool { return q.tryRecv(value, true) }
 
 // TryRecv receives a value from the queue and returns when it is empty
-func (q *MPMCq_go) TryRecv(value *Value) bool { return q.tryRecv(value, false) }
+func (q *MPMCqGo) TryRecv(value *Value) bool { return q.tryRecv(value, false) }
 
-func (q *MPMCq_go) trySend(value *Value, block bool) bool {
+func (q *MPMCqGo) trySend(value *Value, block bool) bool {
 	for loopCount := 0; ; backoff(&loopCount) {
 		x := atomic.LoadUint64(&q.sendx)
 		seq, pos := uint32(x>>32), uint32(x)
@@ -114,15 +114,14 @@ func (q *MPMCq_go) trySend(value *Value, block bool) bool {
 			//fmt.Printf("send: sleep %v\n", pos)
 			q.sendq.Wait()
 			q.mu.Unlock()
-		} else {
-			// The element has already been written on this seq,
-			// this means that q.sendx has been changed as well,
-			// retry.
 		}
+		// The element has already been written on this seq,
+		// this means that q.sendx has been changed as well,
+		// retry.
 	}
 }
 
-func (q *MPMCq_go) tryRecv(result *Value, block bool) bool {
+func (q *MPMCqGo) tryRecv(result *Value, block bool) bool {
 	var empty Value
 	for loopCount := 0; ; backoff(&loopCount) {
 		// if closed return false
@@ -175,10 +174,9 @@ func (q *MPMCq_go) tryRecv(result *Value, block bool) bool {
 			}
 			q.recvq.Wait()
 			q.mu.Unlock()
-		} else {
-			// The element has already been read on this seq,
-			// this means that q.recvx has been changed as well,
-			// retry.
 		}
+		// The element has already been read on this seq,
+		// this means that q.recvx has been changed as well,
+		// retry.
 	}
 }

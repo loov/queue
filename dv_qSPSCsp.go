@@ -6,12 +6,12 @@ import (
 	"github.com/egonelbre/exp/sync2/spin"
 )
 
-var _ SPSC = (*SPSCqsp_dv)(nil)
+var _ SPSC = (*SPSCqspDV)(nil)
 
-// SPSCqsp_dv is a SPSC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
+// SPSCqspDV is a SPSC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
 //
 // This modifies the base algorithm by removing relevant atomic ops for Send and Recv
-type SPSCqsp_dv struct {
+type SPSCqspDV struct {
 	_ [8]int64
 
 	buffer []seqPaddedValue
@@ -25,14 +25,14 @@ type SPSCqsp_dv struct {
 	_     [7]int64
 }
 
-// NewSPSCqsp_dv creates a new SPSCqsp_dv queue
-func NewSPSCqsp_dv(size int) *SPSCqsp_dv {
+// NewSPSCqspDV creates a new SPSCqspDV queue
+func NewSPSCqspDV(size int) *SPSCqspDV {
 	if size <= 1 {
 		size = 2
 	}
 	size = int(nextPowerOfTwo(uint32(size)))
 
-	q := &SPSCqsp_dv{}
+	q := &SPSCqspDV{}
 	q.buffer = make([]seqPaddedValue, size)
 	q.mask = int64(size) - 1
 	for i := range q.buffer {
@@ -43,10 +43,10 @@ func NewSPSCqsp_dv(size int) *SPSCqsp_dv {
 }
 
 // Cap returns number of elements this queue can hold before blocking
-func (q *SPSCqsp_dv) Cap() int { return len(q.buffer) }
+func (q *SPSCqspDV) Cap() int { return len(q.buffer) }
 
 // Send sends a value to the queue and blocks when it is full
-func (q *SPSCqsp_dv) Send(v Value) bool {
+func (q *SPSCqspDV) Send(v Value) bool {
 	var s spin.T256
 	for s.Spin() {
 		if q.TrySend(v) {
@@ -57,7 +57,7 @@ func (q *SPSCqsp_dv) Send(v Value) bool {
 }
 
 // TrySend tries to send a value to the queue and returns immediately when it is full
-func (q *SPSCqsp_dv) TrySend(v Value) bool {
+func (q *SPSCqspDV) TrySend(v Value) bool {
 	var cell *seqPaddedValue
 	pos := q.sendx
 	for {
@@ -79,7 +79,7 @@ func (q *SPSCqsp_dv) TrySend(v Value) bool {
 }
 
 // Recv receives a value from the queue and blocks when it is empty
-func (q *SPSCqsp_dv) Recv(v *Value) bool {
+func (q *SPSCqspDV) Recv(v *Value) bool {
 	var s spin.T256
 	for s.Spin() {
 		if q.TryRecv(v) {
@@ -90,7 +90,7 @@ func (q *SPSCqsp_dv) Recv(v *Value) bool {
 }
 
 // TryRecv receives a value from the queue and returns when it is empty
-func (q *SPSCqsp_dv) TryRecv(v *Value) bool {
+func (q *SPSCqspDV) TryRecv(v *Value) bool {
 	var cell *seqPaddedValue
 	pos := q.recvx
 	for {

@@ -1,6 +1,6 @@
 // Package queue contains many different concurrent queue algorithms and tests
 //
-// All names follow  a convention: "[SM]P[SM]C[sw]?i?p?[rnacq]_<variant>""
+// All names follow  a convention: "[SM]P[SM]C[sw]?i?p?[rnacq]<variant>""
 //
 //     [SM]P:
 //        supports either single `S` or multiple `M` concurrent producers

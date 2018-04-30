@@ -1,48 +1,43 @@
 package queue
 
-var _ MPMC = (*MPMCc_go)(nil)
+var _ MPMC = (*MPMCcGo)(nil)
 
-// MPMCc_go is a wrapper around go standard channel implementing Queue interfaces
-type MPMCc_go struct {
+// MPMCcGo is a wrapper around go standard channel implementing Queue interfaces
+type MPMCcGo struct {
 	ch chan Value
 }
 
-// NewMPMCc_go creates a new MPMCc_go queue
-func NewMPMCc_go(size int) *MPMCc_go {
-	return &MPMCc_go{make(chan Value, size)}
+// NewMPMCcGo creates a new MPMCcGo queue
+func NewMPMCcGo(size int) *MPMCcGo {
+	return &MPMCcGo{make(chan Value, size)}
 }
 
 // Cap returns number of elements this queue can hold before blocking
-func (q *MPMCc_go) Cap() int { return cap(q.ch) }
+func (q *MPMCcGo) Cap() int { return cap(q.ch) }
 
 // MultipleProducers makes this a MP queue
-func (q *MPMCc_go) MultipleProducers() {}
+func (q *MPMCcGo) MultipleProducers() {}
 
 // MultipleConsumers makes this a MC queue
-func (q *MPMCc_go) MultipleConsumers() {}
+func (q *MPMCcGo) MultipleConsumers() {}
 
 // Close closes this queue
-func (q *MPMCc_go) Close() { close(q.ch) }
+func (q *MPMCcGo) Close() { close(q.ch) }
 
 // Send sends a value to the queue and blocks when it is full
-func (q *MPMCc_go) Send(v Value) bool {
-	select {
-	case q.ch <- v:
-		return true
-	}
+func (q *MPMCcGo) Send(v Value) bool {
+	q.ch <- v
+	return true
 }
 
 // Recv receives a value from the queue and blocks when it is empty
-func (q *MPMCc_go) Recv(v *Value) bool {
-	select {
-	case x := <-q.ch:
-		*v = x
-		return true
-	}
+func (q *MPMCcGo) Recv(v *Value) bool {
+	*v = <-q.ch
+	return true
 }
 
 // TrySend tries to send a value to the queue and returns immediately when it is full
-func (q *MPMCc_go) TrySend(v Value) bool {
+func (q *MPMCcGo) TrySend(v Value) bool {
 	select {
 	case q.ch <- v:
 		return true
@@ -52,7 +47,7 @@ func (q *MPMCc_go) TrySend(v Value) bool {
 }
 
 // TryRecv receives a value from the queue and returns when it is empty
-func (q *MPMCc_go) TryRecv(v *Value) bool {
+func (q *MPMCcGo) TryRecv(v *Value) bool {
 	select {
 	case x := <-q.ch:
 		*v = x

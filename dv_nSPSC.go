@@ -7,10 +7,10 @@ import (
 	"github.com/egonelbre/exp/sync2/spin"
 )
 
-var _ SPSC = (*SPSCns_dv)(nil)
+var _ SPSC = (*SPSCnsDV)(nil)
 
-// SPSCns_dv is a SPSC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/unbounded-spsc-queue
-type SPSCns_dv struct {
+// SPSCnsDV is a SPSC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/unbounded-spsc-queue
+type SPSCnsDV struct {
 	_    [8]uint64
 	stub Node
 	_    [7]uint64
@@ -24,9 +24,9 @@ type SPSCns_dv struct {
 	_    [7]uint64
 }
 
-// NewSPSCns_dv creates a new SPSCns_dv queue
-func NewSPSCns_dv() *SPSCns_dv {
-	q := &SPSCns_dv{}
+// NewSPSCnsDV creates a new SPSCnsDV queue
+func NewSPSCnsDV() *SPSCnsDV {
+	q := &SPSCnsDV{}
 	q.head = unsafe.Pointer(&q.stub)
 	q.tail = unsafe.Pointer(&q.stub)
 	q.first = unsafe.Pointer(&q.stub)
@@ -35,7 +35,7 @@ func NewSPSCns_dv() *SPSCns_dv {
 }
 
 // Send sends a value to the queue, always succeeds
-func (q *SPSCns_dv) Send(value Value) bool {
+func (q *SPSCnsDV) Send(value Value) bool {
 	n := q.alloc()
 	n.Value = value
 	n.next = nil
@@ -45,10 +45,10 @@ func (q *SPSCns_dv) Send(value Value) bool {
 }
 
 // TrySend tries to send a value to the queue, always succeeds
-func (q *SPSCns_dv) TrySend(value Value) bool { return q.Send(value) }
+func (q *SPSCnsDV) TrySend(value Value) bool { return q.Send(value) }
 
 // Recv receives a value from the queue and blocks when it is empty
-func (q *SPSCns_dv) Recv(value *Value) bool {
+func (q *SPSCnsDV) Recv(value *Value) bool {
 	var s spin.T256
 	for s.Spin() {
 		if q.TryRecv(value) {
@@ -59,7 +59,7 @@ func (q *SPSCns_dv) Recv(value *Value) bool {
 }
 
 // TryRecv receives a value from the queue and returns when it is full
-func (q *SPSCns_dv) TryRecv(value *Value) bool {
+func (q *SPSCnsDV) TryRecv(value *Value) bool {
 	tail := (*Node)(q.tail)
 	next := atomic.LoadPointer(&tail.next)
 	if next == nil {
@@ -70,7 +70,7 @@ func (q *SPSCns_dv) TryRecv(value *Value) bool {
 	return true
 }
 
-func (q *SPSCns_dv) alloc() *Node {
+func (q *SPSCnsDV) alloc() *Node {
 	// first tries to allocate node from internal node cache,
 	// if attempt fails, allocates node via ::operator new()
 

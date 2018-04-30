@@ -59,7 +59,6 @@ func MustSendIn(q NonblockingSPSC, v Value, dur time.Duration) bool {
 			}
 		}
 	}
-	return false
 }
 
 func MustRecvIn(q NonblockingSPSC, v *Value, dur time.Duration) bool {
@@ -81,7 +80,6 @@ func MustRecvIn(q NonblockingSPSC, v *Value, dur time.Duration) bool {
 			}
 		}
 	}
-	return false
 }
 
 func ProducerConsumer(t *testing.T, NP, NC int, producer, consumer func(id int) error) {

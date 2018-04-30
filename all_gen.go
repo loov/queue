@@ -13,25 +13,25 @@ import (
 )
 
 var Impls = []Impl{
-	{"MPMCc_go", Blocking | Nonblocking},
-	{"MPMCq_go", Blocking | Nonblocking},
-	{"MPMCqp_go", Blocking | Nonblocking},
+	{"MPMCcGo", Blocking | Nonblocking},
+	{"MPMCqGo", Blocking | Nonblocking},
+	{"MPMCqpGo", Blocking | Nonblocking},
 
-	// {"SPSCr_mc", Broken | Blocking | Batched},
-	// {"SPSCrs_mc", Broken | Blocking | Batched},
-	// {"MPSCr_mc", Broken | Blocking | Batched},
-	// {"MPSCrs_mc", Blocking | Batched},
+	// {"SPSCrMC", Broken | Blocking | Batched},
+	// {"SPSCrsMC", Broken | Blocking | Batched},
+	// {"MPSCrMC", Broken | Blocking | Batched},
+	// {"MPSCrsMC", Blocking | Batched},
 
-	{"SPSCns_dv", Blocking | Nonblocking | Unbounded},
-	{"MPSCns_dv", Blocking | Nonblocking | Unbounded},
-	// {"MPSCnsi_dv", Blocking | Nonblocking | Unbounded},
+	{"SPSCnsDV", Blocking | Nonblocking | Unbounded},
+	{"MPSCnsDV", Blocking | Nonblocking | Unbounded},
+	// {"MPSCnsiDV", Blocking | Nonblocking | Unbounded},
 
-	{"MPMCqs_dv", Blocking | Nonblocking},
-	{"MPMCqsp_dv", Blocking | Nonblocking},
-	{"SPMCqs_dv", Blocking | Nonblocking},
-	{"SPMCqsp_dv", Blocking | Nonblocking},
-	{"SPSCqs_dv", Blocking | Nonblocking},
-	{"SPSCqsp_dv", Blocking | Nonblocking},
+	{"MPMCqsDV", Blocking | Nonblocking},
+	{"MPMCqspDV", Blocking | Nonblocking},
+	{"SPMCqsDV", Blocking | Nonblocking},
+	{"SPMCqspDV", Blocking | Nonblocking},
+	{"SPSCqsDV", Blocking | Nonblocking},
+	{"SPSCqspDV", Blocking | Nonblocking},
 }
 
 type Flag int

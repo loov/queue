@@ -18,5 +18,5 @@ type seqValue32 struct {
 type seqPaddedValue32 struct {
 	sequence uint32
 	value    Value
-	_        [16 - 2 - 1]int32
+	_        [8 - 2]int32
 }

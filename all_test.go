@@ -11,207 +11,207 @@ import (
 	"github.com/loov/queue/testsuite"
 )
 
-var _ MPMC = (*MPMCc_go)(nil)
-var _ NonblockingMPMC = (*MPMCc_go)(nil)
+var _ MPMC = (*MPMCcGo)(nil)
+var _ NonblockingMPMC = (*MPMCcGo)(nil)
 
-func TestMPMCc_go(t *testing.T) {
+func TestMPMCcGo(t *testing.T) {
 	batchSize := 0
 	for _, size := range testsuite.TestSizes {
 		name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewMPMCc_go(size) }) })
+		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewMPMCcGo(size) }) })
 	}
 }
 
-func BenchmarkMPMCc_go(b *testing.B) {
+func BenchmarkMPMCcGo(b *testing.B) {
 	batchSize := 0
 	for _, size := range testsuite.BenchSizes {
 		name := strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewMPMCc_go(size) }) })
+		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewMPMCcGo(size) }) })
 	}
 }
 
-var _ MPMC = (*MPMCq_go)(nil)
-var _ NonblockingMPMC = (*MPMCq_go)(nil)
+var _ MPMC = (*MPMCqGo)(nil)
+var _ NonblockingMPMC = (*MPMCqGo)(nil)
 
-func TestMPMCq_go(t *testing.T) {
+func TestMPMCqGo(t *testing.T) {
 	batchSize := 0
 	for _, size := range testsuite.TestSizes {
 		name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewMPMCq_go(size) }) })
+		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewMPMCqGo(size) }) })
 	}
 }
 
-func BenchmarkMPMCq_go(b *testing.B) {
+func BenchmarkMPMCqGo(b *testing.B) {
 	batchSize := 0
 	for _, size := range testsuite.BenchSizes {
 		name := strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewMPMCq_go(size) }) })
+		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewMPMCqGo(size) }) })
 	}
 }
 
-var _ MPMC = (*MPMCqp_go)(nil)
-var _ NonblockingMPMC = (*MPMCqp_go)(nil)
+var _ MPMC = (*MPMCqpGo)(nil)
+var _ NonblockingMPMC = (*MPMCqpGo)(nil)
 
-func TestMPMCqp_go(t *testing.T) {
+func TestMPMCqpGo(t *testing.T) {
 	batchSize := 0
 	for _, size := range testsuite.TestSizes {
 		name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewMPMCqp_go(size) }) })
+		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewMPMCqpGo(size) }) })
 	}
 }
 
-func BenchmarkMPMCqp_go(b *testing.B) {
+func BenchmarkMPMCqpGo(b *testing.B) {
 	batchSize := 0
 	for _, size := range testsuite.BenchSizes {
 		name := strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewMPMCqp_go(size) }) })
+		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewMPMCqpGo(size) }) })
 	}
 }
 
-var _ SPSC = (*SPSCns_dv)(nil)
-var _ NonblockingSPSC = (*SPSCns_dv)(nil)
+var _ SPSC = (*SPSCnsDV)(nil)
+var _ NonblockingSPSC = (*SPSCnsDV)(nil)
 
-func TestSPSCns_dv(t *testing.T) {
+func TestSPSCnsDV(t *testing.T) {
 	batchSize := 0
 	size := 0
 	name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-	t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewSPSCns_dv() }) })
+	t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewSPSCnsDV() }) })
 }
 
-func BenchmarkSPSCns_dv(b *testing.B) {
+func BenchmarkSPSCnsDV(b *testing.B) {
 	batchSize := 0
 	size := 0
 	name := strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-	b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewSPSCns_dv() }) })
+	b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewSPSCnsDV() }) })
 }
 
-var _ MPSC = (*MPSCns_dv)(nil)
-var _ NonblockingMPSC = (*MPSCns_dv)(nil)
+var _ MPSC = (*MPSCnsDV)(nil)
+var _ NonblockingMPSC = (*MPSCnsDV)(nil)
 
-func TestMPSCns_dv(t *testing.T) {
+func TestMPSCnsDV(t *testing.T) {
 	batchSize := 0
 	size := 0
 	name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-	t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewMPSCns_dv() }) })
+	t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewMPSCnsDV() }) })
 }
 
-func BenchmarkMPSCns_dv(b *testing.B) {
+func BenchmarkMPSCnsDV(b *testing.B) {
 	batchSize := 0
 	size := 0
 	name := strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-	b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewMPSCns_dv() }) })
+	b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewMPSCnsDV() }) })
 }
 
-var _ MPMC = (*MPMCqs_dv)(nil)
-var _ NonblockingMPMC = (*MPMCqs_dv)(nil)
+var _ MPMC = (*MPMCqsDV)(nil)
+var _ NonblockingMPMC = (*MPMCqsDV)(nil)
 
-func TestMPMCqs_dv(t *testing.T) {
+func TestMPMCqsDV(t *testing.T) {
 	batchSize := 0
 	for _, size := range testsuite.TestSizes {
 		name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewMPMCqs_dv(size) }) })
+		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewMPMCqsDV(size) }) })
 	}
 }
 
-func BenchmarkMPMCqs_dv(b *testing.B) {
+func BenchmarkMPMCqsDV(b *testing.B) {
 	batchSize := 0
 	for _, size := range testsuite.BenchSizes {
 		name := strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewMPMCqs_dv(size) }) })
+		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewMPMCqsDV(size) }) })
 	}
 }
 
-var _ MPMC = (*MPMCqsp_dv)(nil)
-var _ NonblockingMPMC = (*MPMCqsp_dv)(nil)
+var _ MPMC = (*MPMCqspDV)(nil)
+var _ NonblockingMPMC = (*MPMCqspDV)(nil)
 
-func TestMPMCqsp_dv(t *testing.T) {
+func TestMPMCqspDV(t *testing.T) {
 	batchSize := 0
 	for _, size := range testsuite.TestSizes {
 		name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewMPMCqsp_dv(size) }) })
+		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewMPMCqspDV(size) }) })
 	}
 }
 
-func BenchmarkMPMCqsp_dv(b *testing.B) {
+func BenchmarkMPMCqspDV(b *testing.B) {
 	batchSize := 0
 	for _, size := range testsuite.BenchSizes {
 		name := strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewMPMCqsp_dv(size) }) })
+		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewMPMCqspDV(size) }) })
 	}
 }
 
-var _ SPMC = (*SPMCqs_dv)(nil)
-var _ NonblockingSPMC = (*SPMCqs_dv)(nil)
+var _ SPMC = (*SPMCqsDV)(nil)
+var _ NonblockingSPMC = (*SPMCqsDV)(nil)
 
-func TestSPMCqs_dv(t *testing.T) {
+func TestSPMCqsDV(t *testing.T) {
 	batchSize := 0
 	for _, size := range testsuite.TestSizes {
 		name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewSPMCqs_dv(size) }) })
+		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewSPMCqsDV(size) }) })
 	}
 }
 
-func BenchmarkSPMCqs_dv(b *testing.B) {
+func BenchmarkSPMCqsDV(b *testing.B) {
 	batchSize := 0
 	for _, size := range testsuite.BenchSizes {
 		name := strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewSPMCqs_dv(size) }) })
+		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewSPMCqsDV(size) }) })
 	}
 }
 
-var _ SPMC = (*SPMCqsp_dv)(nil)
-var _ NonblockingSPMC = (*SPMCqsp_dv)(nil)
+var _ SPMC = (*SPMCqspDV)(nil)
+var _ NonblockingSPMC = (*SPMCqspDV)(nil)
 
-func TestSPMCqsp_dv(t *testing.T) {
+func TestSPMCqspDV(t *testing.T) {
 	batchSize := 0
 	for _, size := range testsuite.TestSizes {
 		name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewSPMCqsp_dv(size) }) })
+		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewSPMCqspDV(size) }) })
 	}
 }
 
-func BenchmarkSPMCqsp_dv(b *testing.B) {
+func BenchmarkSPMCqspDV(b *testing.B) {
 	batchSize := 0
 	for _, size := range testsuite.BenchSizes {
 		name := strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewSPMCqsp_dv(size) }) })
+		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewSPMCqspDV(size) }) })
 	}
 }
 
-var _ SPSC = (*SPSCqs_dv)(nil)
-var _ NonblockingSPSC = (*SPSCqs_dv)(nil)
+var _ SPSC = (*SPSCqsDV)(nil)
+var _ NonblockingSPSC = (*SPSCqsDV)(nil)
 
-func TestSPSCqs_dv(t *testing.T) {
+func TestSPSCqsDV(t *testing.T) {
 	batchSize := 0
 	for _, size := range testsuite.TestSizes {
 		name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewSPSCqs_dv(size) }) })
+		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewSPSCqsDV(size) }) })
 	}
 }
 
-func BenchmarkSPSCqs_dv(b *testing.B) {
+func BenchmarkSPSCqsDV(b *testing.B) {
 	batchSize := 0
 	for _, size := range testsuite.BenchSizes {
 		name := strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewSPSCqs_dv(size) }) })
+		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewSPSCqsDV(size) }) })
 	}
 }
 
-var _ SPSC = (*SPSCqsp_dv)(nil)
-var _ NonblockingSPSC = (*SPSCqsp_dv)(nil)
+var _ SPSC = (*SPSCqspDV)(nil)
+var _ NonblockingSPSC = (*SPSCqspDV)(nil)
 
-func TestSPSCqsp_dv(t *testing.T) {
+func TestSPSCqspDV(t *testing.T) {
 	batchSize := 0
 	for _, size := range testsuite.TestSizes {
 		name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewSPSCqsp_dv(size) }) })
+		t.Run(name, func(t *testing.T) { testsuite.Tests(t, func() testsuite.Queue { return NewSPSCqspDV(size) }) })
 	}
 }
 
-func BenchmarkSPSCqsp_dv(b *testing.B) {
+func BenchmarkSPSCqspDV(b *testing.B) {
 	batchSize := 0
 	for _, size := range testsuite.BenchSizes {
 		name := strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewSPSCqsp_dv(size) }) })
+		b.Run(name, func(b *testing.B) { testsuite.Benchmarks(b, func() testsuite.Queue { return NewSPSCqspDV(size) }) })
 	}
 }
