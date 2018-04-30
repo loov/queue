@@ -1,9 +1,11 @@
 package queue
 
 import (
+	"flag"
 	"testing"
 )
 
+var shake = flag.Int("shake", 1, "run tests multiple times")
 var TestProcs = 16
 
 var TestSizes = [...]int{
@@ -32,17 +34,27 @@ func RunTests(t *testing.T, ctor func() Queue) {
 	}
 	t.Helper()
 
+	// TODO: add system noise when shaking
+
 	if caps.Has(CapBlockSPSC) {
-		t.Run("SPSC", func(t *testing.T) { t.Helper(); testSPSC(t, caps, ctor) })
+		for i := 0; i < *shake; i++ {
+			t.Run("SPSC", func(t *testing.T) { t.Helper(); testSPSC(t, caps, ctor) })
+		}
 	}
 	if caps.Has(CapBlockMPSC) {
-		t.Run("MPSC", func(t *testing.T) { t.Helper(); testMPSC(t, caps, ctor) })
+		for i := 0; i < *shake; i++ {
+			t.Run("MPSC", func(t *testing.T) { t.Helper(); testMPSC(t, caps, ctor) })
+		}
 	}
 	if caps.Has(CapBlockSPMC) {
-		t.Run("SPMC", func(t *testing.T) { t.Helper(); testSPMC(t, caps, ctor) })
+		for i := 0; i < *shake; i++ {
+			t.Run("SPMC", func(t *testing.T) { t.Helper(); testSPMC(t, caps, ctor) })
+		}
 	}
 	if caps.Has(CapBlockMPMC) {
-		t.Run("MPMC", func(t *testing.T) { t.Helper(); testMPMC(t, caps, ctor) })
+		for i := 0; i < *shake; i++ {
+			t.Run("MPMC", func(t *testing.T) { t.Helper(); testMPMC(t, caps, ctor) })
+		}
 	}
 }
 
