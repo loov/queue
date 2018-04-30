@@ -1,7 +1,6 @@
 package queue
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -28,7 +27,6 @@ var TestCount = [...]int{
 func RunTests(t *testing.T, ctor func() Queue) {
 	q := ctor()
 	caps := Detect(q)
-	fmt.Printf("%T: %v\n", q, caps)
 	if !caps.Any(CapQueue) {
 		t.Fatal("does not implement any of queue interfaces")
 	}
