@@ -24,6 +24,7 @@ type SPSCns_dv struct {
 	_    [7]uint64
 }
 
+// NewSPSCns_dv creates a new SPSCns_dv queue
 func NewSPSCns_dv() *SPSCns_dv {
 	q := &SPSCns_dv{}
 	q.head = unsafe.Pointer(&q.stub)
@@ -33,6 +34,7 @@ func NewSPSCns_dv() *SPSCns_dv {
 	return q
 }
 
+// Send sends a value to the queue, always succeeds
 func (q *SPSCns_dv) Send(value Value) bool {
 	n := q.alloc()
 	n.Value = value
@@ -42,8 +44,10 @@ func (q *SPSCns_dv) Send(value Value) bool {
 	return true
 }
 
+// TrySend tries to send a value to the queue, always succeeds
 func (q *SPSCns_dv) TrySend(value Value) bool { return q.Send(value) }
 
+// Recv receives a value from the queue and blocks when it is empty
 func (q *SPSCns_dv) Recv(value *Value) bool {
 	var s spin.T256
 	for s.Spin() {
@@ -54,6 +58,7 @@ func (q *SPSCns_dv) Recv(value *Value) bool {
 	return false
 }
 
+// TryRecv receives a value from the queue and returns when it is full
 func (q *SPSCns_dv) TryRecv(value *Value) bool {
 	tail := (*Node)(q.tail)
 	next := atomic.LoadPointer(&tail.next)

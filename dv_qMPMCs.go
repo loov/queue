@@ -23,6 +23,7 @@ type MPMCqs_dv struct {
 	_     [7]int64
 }
 
+// NewMPMCqs_dv creates a NewMPMCqs_dv queue
 func NewMPMCqs_dv(size int) *MPMCqs_dv {
 	if size <= 1 {
 		size = 2
@@ -39,11 +40,16 @@ func NewMPMCqs_dv(size int) *MPMCqs_dv {
 	return q
 }
 
+// Cap returns number of elements this queue can hold before blocking
 func (q *MPMCqs_dv) Cap() int { return len(q.buffer) }
 
+// MultipleConsumers makes this a MC queue
 func (q *MPMCqs_dv) MultipleConsumers() {}
+
+// MultipleProducers makes this a MP queue
 func (q *MPMCqs_dv) MultipleProducers() {}
 
+// Send sends a value to the queue and blocks when it is full
 func (q *MPMCqs_dv) Send(v Value) bool {
 	var s spin.T256
 	for s.Spin() {
@@ -54,6 +60,7 @@ func (q *MPMCqs_dv) Send(v Value) bool {
 	return false
 }
 
+// TrySend tries to send a value to the queue and returns immediately when it is full
 func (q *MPMCqs_dv) TrySend(v Value) bool {
 	var cell *seqValue
 	pos := atomic.LoadInt64(&q.sendx)
@@ -78,6 +85,7 @@ func (q *MPMCqs_dv) TrySend(v Value) bool {
 	return true
 }
 
+// Recv receives a value from the queue and blocks when it is empty
 func (q *MPMCqs_dv) Recv(v *Value) bool {
 	var s spin.T256
 	for s.Spin() {
@@ -88,6 +96,7 @@ func (q *MPMCqs_dv) Recv(v *Value) bool {
 	return false
 }
 
+// TryRecv receives a value from the queue and returns when it is full
 func (q *MPMCqs_dv) TryRecv(v *Value) bool {
 	var cell *seqValue
 	pos := atomic.LoadInt64(&q.recvx)

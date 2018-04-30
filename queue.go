@@ -1,5 +1,6 @@
 package queue
 
+// Value is the data being sent
 type Value = int64
 
 // Queue is the general interface

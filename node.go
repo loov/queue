@@ -2,7 +2,7 @@ package queue
 
 import "unsafe"
 
-// Exposed node for intrusive implementations
+// Node for using intrusive implementations
 type Node struct {
 	next  unsafe.Pointer
 	Value Value

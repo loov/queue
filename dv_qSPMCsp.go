@@ -23,6 +23,7 @@ type SPMCqsp_dv struct {
 	_     [7]int64
 }
 
+// NewSPMCqsp_dv creates a new SPMCqsp_dv queue
 func NewSPMCqsp_dv(size int) *SPMCqsp_dv {
 	if size <= 1 {
 		size = 2
@@ -39,10 +40,13 @@ func NewSPMCqsp_dv(size int) *SPMCqsp_dv {
 	return q
 }
 
+// Cap returns number of elements this queue can hold before blocking
 func (q *SPMCqsp_dv) Cap() int { return len(q.buffer) }
 
+// MultipleConsumers makes this a MC queue
 func (q *SPMCqsp_dv) MultipleConsumers() {}
 
+// Send sends a value to the queue and blocks when it is full
 func (q *SPMCqsp_dv) Send(v Value) bool {
 	var s spin.T256
 	for s.Spin() {
@@ -53,6 +57,7 @@ func (q *SPMCqsp_dv) Send(v Value) bool {
 	return false
 }
 
+// TrySend tries to send a value to the queue and returns immediately when it is full
 func (q *SPMCqsp_dv) TrySend(v Value) bool {
 	var cell *seqPaddedValue
 	pos := q.sendx
@@ -74,6 +79,7 @@ func (q *SPMCqsp_dv) TrySend(v Value) bool {
 	return true
 }
 
+// Recv receives a value from the queue and blocks when it is empty
 func (q *SPMCqsp_dv) Recv(v *Value) bool {
 	var s spin.T256
 	for s.Spin() {
@@ -84,6 +90,7 @@ func (q *SPMCqsp_dv) Recv(v *Value) bool {
 	return false
 }
 
+// TryRecv receives a value from the queue and returns when it is empty
 func (q *SPMCqsp_dv) TryRecv(v *Value) bool {
 	var cell *seqPaddedValue
 	pos := atomic.LoadInt64(&q.recvx)

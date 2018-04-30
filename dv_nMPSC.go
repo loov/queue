@@ -20,6 +20,7 @@ type MPSCns_dv struct {
 	_    [7]uint64
 }
 
+// NewMPSCns_dv creates a MPSCns_dv queue
 func NewMPSCns_dv() *MPSCns_dv {
 	q := &MPSCns_dv{}
 	q.head = unsafe.Pointer(&q.stub)
@@ -27,8 +28,10 @@ func NewMPSCns_dv() *MPSCns_dv {
 	return q
 }
 
+// MultipleProducers makes this a MP queue
 func (q *MPSCns_dv) MultipleProducers() {}
 
+// Send sends a value to the queue, always suceeds
 func (q *MPSCns_dv) Send(value Value) bool {
 	n := &Node{Value: value}
 	prev := atomic.SwapPointer(&q.head, unsafe.Pointer(n))
@@ -37,8 +40,10 @@ func (q *MPSCns_dv) Send(value Value) bool {
 	return true
 }
 
+// TrySend sends a value to the queue, always suceeds
 func (q *MPSCns_dv) TrySend(value Value) bool { return q.Send(value) }
 
+// Recv receives a value from the queue and blocks when it is empty
 func (q *MPSCns_dv) Recv(value *Value) bool {
 	var s spin.T256
 	for s.Spin() {
@@ -49,6 +54,7 @@ func (q *MPSCns_dv) Recv(value *Value) bool {
 	return false
 }
 
+// TryRecv receives a value from the queue and returns when it is empty
 func (q *MPSCns_dv) TryRecv(value *Value) bool {
 	tail := (*Node)(q.tail)
 	next := atomic.LoadPointer(&tail.next)

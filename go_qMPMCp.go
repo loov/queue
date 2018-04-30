@@ -20,6 +20,7 @@ type MPMCqp_go struct {
 	recvq sync.Cond
 }
 
+// NewMPMCqp_go creates a new MPMCqp_go queue
 func NewMPMCqp_go(size int) *MPMCqp_go {
 	if size < 2 {
 		size = 2
@@ -34,16 +35,27 @@ func NewMPMCqp_go(size int) *MPMCqp_go {
 	return q
 }
 
-func (q *MPMCqp_go) Cap() int           { return len(q.buffer) }
+// Cap returns number of elements this queue can hold before blocking
+func (q *MPMCqp_go) Cap() int { return len(q.buffer) }
+
+// MultipleConsumers makes this a MC queue
 func (q *MPMCqp_go) MultipleConsumers() {}
+
+// MultipleProducers makes this a MP queue
 func (q *MPMCqp_go) MultipleProducers() {}
 
 func (q *MPMCqp_go) cap() uint32 { return uint32(len(q.buffer)) }
 
-func (q *MPMCqp_go) Send(value Value) bool    { return q.trySend(&value, true) }
+// Send sends a value to the queue and blocks when it is full
+func (q *MPMCqp_go) Send(value Value) bool { return q.trySend(&value, true) }
+
+// TrySend tries to send a value to the queue and returns immediately when it is full
 func (q *MPMCqp_go) TrySend(value Value) bool { return q.trySend(&value, false) }
 
-func (q *MPMCqp_go) Recv(value *Value) bool    { return q.tryRecv(value, true) }
+// Recv receives a value from the queue and blocks when it is empty
+func (q *MPMCqp_go) Recv(value *Value) bool { return q.tryRecv(value, true) }
+
+// TryRecv receives a value from the queue and returns when it is full
 func (q *MPMCqp_go) TryRecv(value *Value) bool { return q.tryRecv(value, false) }
 
 func (q *MPMCqp_go) trySend(value *Value, block bool) bool {
