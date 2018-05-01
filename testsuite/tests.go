@@ -15,8 +15,10 @@ func testSPSC(t *testing.T, caps Capability, ctor func() Queue) {
 			for i := 0; i < count; i++ {
 				exp := Value(i)
 				q.Send(exp)
+				FlushSend(q)
 				var got Value
 				q.Recv(&got)
+				FlushRecv(q)
 				if exp != got {
 					t.Fatalf("expected %v got %v", exp, got)
 				}
@@ -179,11 +181,13 @@ func testMPMC(t *testing.T, caps Capability, ctor func() Queue) {
 						if !q.Send(Value(id)<<32 | Value(i+1)) {
 							return fmt.Errorf("failed to send %v", i)
 						}
+						FlushSend(q)
 
 						var val Value
 						if !q.Recv(&val) {
 							return fmt.Errorf("failed to get")
 						}
+						FlushRecv(q)
 
 						id, got := int(val>>32), val&0xFFFFFFFF
 						exp := latest[id]
@@ -241,10 +245,12 @@ func testNonblockSPSC(t *testing.T, caps Capability, ctor func() Queue) {
 				if !q.TrySend(exp) {
 					t.Fatalf("send failed")
 				}
+				FlushSend(q)
 				var got Value
 				if !q.TryRecv(&got) {
 					t.Fatalf("recv failed")
 				}
+				FlushRecv(q)
 				if exp != got {
 					t.Fatalf("expected %v got %v", exp, got)
 				}
@@ -382,11 +388,13 @@ func testNonblockMPMC(t *testing.T, caps Capability, ctor func() Queue) {
 						if !MustSendIn(q, Value(id)<<32|Value(i+1), NonblockThreshold) {
 							return fmt.Errorf("failed to send %v", i)
 						}
+						FlushSend(q)
 
 						var val Value
 						if !MustRecvIn(q, &val, NonblockThreshold) {
 							return fmt.Errorf("failed to get")
 						}
+						FlushRecv(q)
 
 						id, got := int(val>>32), val&0xFFFFFFFF
 						exp := latest[id]

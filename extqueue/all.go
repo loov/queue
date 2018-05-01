@@ -28,10 +28,10 @@ var Descs = []Desc{
 	{"MPMCqGo", Default, func(bs, s int) testsuite.Queue { return NewMPMCqGo(s) }},
 	{"MPMCqpGo", Default, func(bs, s int) testsuite.Queue { return NewMPMCqpGo(s) }},
 
-	// {"SPSCrMC", Batched, func(bs, s int) testsuite.Queue { return NewSPSCrMC(bs, s) }
-	// {"SPSCrsMC", Batched, func(bs, s int) testsuite.Queue { return NewSPSCrsMC(bs, s) }
-	// {"MPSCrMC", Batched, func(bs, s int) testsuite.Queue { return NewMPSCrMC(bs, s) }
-	// {"MPSCrsMC", Batched, func(bs, s int) testsuite.Queue { return NewMPSCrsMC(bs, s) }
+	// {"SPSCrMC", Batched, func(bs, s int) testsuite.Queue { return NewSPSCrMC(bs, s) }},
+	{"SPSCrsMC", Batched, func(bs, s int) testsuite.Queue { return NewSPSCrsMC(bs, s) }},
+	// {"MPSCrMC", Batched, func(bs, s int) testsuite.Queue { return NewMPSCrMC(bs, s) }},
+	// {"MPSCrsMC", Batched, func(bs, s int) testsuite.Queue { return NewMPSCrsMC(bs, s) }},
 
 	{"SPSCnsDV", Unbounded, func(bs, s int) testsuite.Queue { return NewSPSCnsDV() }},
 	{"MPSCnsDV", Unbounded, func(bs, s int) testsuite.Queue { return NewMPSCnsDV() }},
@@ -43,5 +43,4 @@ var Descs = []Desc{
 	{"SPMCqspDV", Default, func(bs, s int) testsuite.Queue { return NewSPMCqspDV(s) }},
 	{"SPSCqsDV", Default, func(bs, s int) testsuite.Queue { return NewSPSCqsDV(s) }},
 	{"SPSCqspDV", Default, func(bs, s int) testsuite.Queue { return NewSPSCqspDV(s) }},
-	// {"SPSCqspDV2", Default, func(bs, s int) testsuite.Queue { return NewSPSCqspDV2(s) }},
 }

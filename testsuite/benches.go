@@ -18,10 +18,20 @@ func benchSPSC(b *testing.B, caps Capability, ctor func() Queue) {
 	b.Run("Single", func(b *testing.B) {
 		q := ctor().(SPSC)
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
-			var v Value
-			q.Send(v)
-			q.Recv(&v)
+		if flusher, ok := q.(Flusher); ok {
+			for i := 0; i < b.N; i++ {
+				var v Value
+				q.Send(v)
+				flusher.FlushSend()
+				q.Recv(&v)
+				flusher.FlushRecv()
+			}
+		} else {
+			for i := 0; i < b.N; i++ {
+				var v Value
+				q.Send(v)
+				q.Recv(&v)
+			}
 		}
 	})
 
@@ -177,11 +187,23 @@ func benchMPMC(b *testing.B, caps Capability, ctor func() Queue) {
 	b.Run("Contended/x100", func(b *testing.B) {
 		q := ctor().(MPMC)
 		b.RunParallel(func(pb *testing.PB) {
-			for pb.Next() {
-				var v Value
-				for i := 0; i < 100; i++ {
-					q.Send(v)
-					q.Recv(&v)
+			if flusher, ok := q.(Flusher); ok {
+				for pb.Next() {
+					for i := 0; i < 100; i++ {
+						var v Value
+						q.Send(v)
+						flusher.FlushSend()
+						q.Recv(&v)
+						flusher.FlushRecv()
+					}
+				}
+			} else {
+				for pb.Next() {
+					for i := 0; i < 100; i++ {
+						var v Value
+						q.Send(v)
+						q.Recv(&v)
+					}
 				}
 			}
 		})
@@ -231,10 +253,20 @@ func benchNonblockSPSC(b *testing.B, caps Capability, ctor func() Queue) {
 	b.Run("Single", func(b *testing.B) {
 		q := ctor().(NonblockingSPSC)
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
-			var v Value
-			q.TrySend(v)
-			q.TryRecv(&v)
+		if flusher, ok := q.(Flusher); ok {
+			for i := 0; i < b.N; i++ {
+				var v Value
+				q.TrySend(v)
+				flusher.FlushSend()
+				q.TryRecv(&v)
+				flusher.FlushRecv()
+			}
+		} else {
+			for i := 0; i < b.N; i++ {
+				var v Value
+				q.TrySend(v)
+				q.TryRecv(&v)
+			}
 		}
 	})
 
