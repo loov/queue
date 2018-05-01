@@ -47,7 +47,3 @@ var Descs = []Desc{
 	{"SPSCqspDV", Default, func(bs, s int) testsuite.Queue { return NewSPSCqspDV(s) }},
 	// {"SPSCqspDV2", Default, func(bs, s int) testsuite.Queue { return NewSPSCqspDV2(s) }},
 }
-
-func TestAll(t *testing.T) {
-	t.Fatal("error")
-}
