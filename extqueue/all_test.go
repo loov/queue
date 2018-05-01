@@ -24,6 +24,10 @@ func Test(t *testing.T) {
 			t.Helper()
 			for _, batchSize := range batchSizes {
 				for _, size := range testSizes {
+					if size <= batchSize {
+						continue
+					}
+
 					name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
 					t.Run(name, func(t *testing.T) {
 						t.Helper()
@@ -40,7 +44,7 @@ func Test(t *testing.T) {
 func Benchmark(b *testing.B) {
 	b.Helper()
 	for _, desc := range Descs {
-		batchSizes := testsuite.BatchSizes
+		batchSizes := testsuite.BenchBatchSizes
 		if !desc.HasBatchSize() {
 			batchSizes = []int{0}
 		}
@@ -54,6 +58,10 @@ func Benchmark(b *testing.B) {
 			b.Helper()
 			for _, batchSize := range batchSizes {
 				for _, size := range benchSizes {
+					if size <= batchSize {
+						continue
+					}
+
 					name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
 					b.Run(name, func(b *testing.B) {
 						b.Helper()
