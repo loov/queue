@@ -69,7 +69,6 @@ func (q *MPSCnsiDV) RecvNode() (*Node, bool) {
 			return node, true
 		}
 	}
-	return nil, false
 }
 
 // TryRecvNode receives a node from the queue and returns when it is empty

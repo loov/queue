@@ -51,7 +51,6 @@ func (q *SPMCqsDV) Send(v Value) bool {
 			return true
 		}
 	}
-	return false
 }
 
 // TrySend tries to send a value to the queue and returns immediately when it is full
@@ -83,7 +82,6 @@ func (q *SPMCqsDV) Recv(v *Value) bool {
 			return true
 		}
 	}
-	return false
 }
 
 // TryRecv receives a value from the queue and returns when it is empty

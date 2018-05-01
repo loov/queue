@@ -50,7 +50,6 @@ func (q *SPSCnsDV) Recv(value *Value) bool {
 			return true
 		}
 	}
-	return false
 }
 
 // TryRecv receives a value from the queue and returns when it is full
