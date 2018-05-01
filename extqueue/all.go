@@ -1,8 +1,6 @@
 package extqueue
 
 import (
-	"testing"
-
 	"github.com/loov/queue/testsuite"
 )
 
