@@ -66,6 +66,32 @@ func benchSPSC(b *testing.B, caps Capability, ctor func() Queue) {
 			}()
 			wg.Wait()
 		})
+
+		b.Run("PingPong"+suffix, func(b *testing.B) {
+			q1, q2 := ctor().(SPSC), ctor().(SPSC)
+			b.ResetTimer()
+			var wg sync.WaitGroup
+			wg.Add(2)
+			go func() {
+				for i := 0; i < b.N; i++ {
+					var v Value
+					q1.Send(v)
+					LocalWork(work)
+					q2.Recv(&v)
+				}
+				wg.Done()
+			}()
+			go func() {
+				for i := 0; i < b.N; i++ {
+					var v Value
+					q1.Recv(&v)
+					LocalWork(work)
+					q2.Send(v)
+				}
+				wg.Done()
+			}()
+			wg.Wait()
+		})
 	}
 }
 
