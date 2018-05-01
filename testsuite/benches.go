@@ -31,6 +31,7 @@ func benchSPSC(b *testing.B, caps Capability, ctor func() Queue) {
 				var v Value
 				q.Send(v)
 				q.Recv(&v)
+				panic("shouldn't end up here")
 			}
 		}
 	})
@@ -38,11 +39,23 @@ func benchSPSC(b *testing.B, caps Capability, ctor func() Queue) {
 	b.Run("Uncontended/x100", func(b *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
 			q := ctor().(SPSC)
-			for pb.Next() {
-				var v Value
-				for i := 0; i < 100; i++ {
-					q.Send(v)
-					q.Recv(&v)
+			if flusher, ok := q.(Flusher); ok {
+				for pb.Next() {
+					var v Value
+					for i := 0; i < 100; i++ {
+						q.Send(v)
+						flusher.FlushSend()
+						q.Recv(&v)
+						flusher.FlushRecv()
+					}
+				}
+			} else {
+				for pb.Next() {
+					var v Value
+					for i := 0; i < 100; i++ {
+						q.Send(v)
+						q.Recv(&v)
+					}
 				}
 			}
 		})
@@ -64,6 +77,7 @@ func benchSPSC(b *testing.B, caps Capability, ctor func() Queue) {
 					q.Send(v)
 					LocalWork(work)
 				}
+				FlushSend(q)
 				wg.Done()
 			}()
 			go func() {
@@ -72,6 +86,7 @@ func benchSPSC(b *testing.B, caps Capability, ctor func() Queue) {
 					q.Recv(&v)
 					LocalWork(work)
 				}
+				FlushRecv(q)
 				wg.Done()
 			}()
 			wg.Wait()
@@ -86,8 +101,10 @@ func benchSPSC(b *testing.B, caps Capability, ctor func() Queue) {
 				for i := 0; i < b.N; i++ {
 					var v Value
 					q1.Send(v)
+					FlushSend(q1)
 					LocalWork(work)
 					q2.Recv(&v)
+					FlushRecv(q2)
 				}
 				wg.Done()
 			}()
@@ -95,8 +112,10 @@ func benchSPSC(b *testing.B, caps Capability, ctor func() Queue) {
 				for i := 0; i < b.N; i++ {
 					var v Value
 					q1.Recv(&v)
+					FlushRecv(q1)
 					LocalWork(work)
 					q2.Send(v)
+					FlushSend(q2)
 				}
 				wg.Done()
 			}()
@@ -125,6 +144,7 @@ func benchMPSC(b *testing.B, caps Capability, ctor func() Queue) {
 							LocalWork(work)
 						}
 					}
+					FlushSend(q)
 				})
 				wg.Done()
 			}()
@@ -163,6 +183,7 @@ func benchSPMC(b *testing.B, caps Capability, ctor func() Queue) {
 						LocalWork(work)
 					}
 				}
+				FlushSend(q)
 				wg.Done()
 			}()
 
@@ -228,6 +249,7 @@ func benchMPMC(b *testing.B, caps Capability, ctor func() Queue) {
 							LocalWork(work)
 						}
 					}
+					FlushSend(q)
 				})
 				wg.Done()
 			}()
@@ -277,7 +299,9 @@ func benchNonblockSPSC(b *testing.B, caps Capability, ctor func() Queue) {
 				var v Value
 				for i := 0; i < 100; i++ {
 					q.TrySend(v)
+					FlushSend(q)
 					q.TryRecv(&v)
+					FlushRecv(q)
 				}
 			}
 		})
@@ -295,7 +319,9 @@ func benchNonblockMPMC(b *testing.B, caps Capability, ctor func() Queue) {
 				var v Value
 				for i := 0; i < 100; i++ {
 					q.TrySend(v)
+					FlushSend(q)
 					q.TryRecv(&v)
+					FlushRecv(q)
 				}
 			}
 		})
