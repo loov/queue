@@ -6,17 +6,14 @@ import (
 
 // MPMCqsDV is a MPMC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
 type MPMCqsDV struct {
-	_ [8]int64
-
-	buffer []seqValue
+	_      [8]int64
 	mask   int64
+	buffer []seqValue
 	_      [4]int64
-
-	sendx int64
-	_     [7]int64
-
-	recvx int64
-	_     [7]int64
+	sendx  int64
+	_      [7]int64
+	recvx  int64
+	_      [7]int64
 }
 
 // NewMPMCqsDV creates a NewMPMCqsDV queue

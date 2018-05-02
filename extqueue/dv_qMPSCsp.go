@@ -6,10 +6,9 @@ import (
 
 // MPSCqspDV is a MPMC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
 type MPSCqspDV struct {
-	_ [8]int64
-
-	buffer []seqPaddedValue
+	_      [8]int64
 	mask   int64
+	buffer []seqPaddedValue
 	_      [4]int64
 	sendx  int64
 	_      [7]int64
