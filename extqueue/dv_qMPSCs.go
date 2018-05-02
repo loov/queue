@@ -6,6 +6,8 @@ import (
 
 // MPSCqsDV is a MPMC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
 type MPSCqsDV struct {
+	_ [8]int64
+
 	buffer []seqValue
 	mask   int64
 	_      [4]int64
@@ -49,21 +51,27 @@ func (q *MPSCqsDV) Send(v Value) bool {
 
 // TrySend tries to send a value to the queue and returns immediately when it is full
 func (q *MPSCqsDV) TrySend(v Value) bool {
+	var cell *seqValue
+	pos := atomic.LoadInt64(&q.sendx)
 	for {
-		pos := atomic.LoadInt64(&q.sendx)
-		cell := &q.buffer[pos&q.mask]
+		cell = &q.buffer[pos&q.mask]
 		seq := atomic.LoadInt64(&cell.sequence)
-		if seq-pos == 0 {
+		df := seq - pos
+		if df == 0 {
 			if atomic.CompareAndSwapInt64(&q.sendx, pos, pos+1) {
-				cell.value = v
-				atomic.StoreInt64(&cell.sequence, pos+1)
-				return true
+				break
 			}
-		} else if seq-pos < 0 {
+		} else if df < 0 {
 			// full
 			return false
+		} else {
+			pos = atomic.LoadInt64(&q.sendx)
 		}
 	}
+
+	cell.value = v
+	atomic.StoreInt64(&cell.sequence, pos+1)
+	return true
 }
 
 // Recv receives a value from the queue and blocks when it is empty
@@ -77,19 +85,22 @@ func (q *MPSCqsDV) Recv(v *Value) bool {
 
 // TryRecv receives a value from the queue and returns when it is empty
 func (q *MPSCqsDV) TryRecv(v *Value) bool {
+	var cell *seqValue
 	pos := q.recvx
-	cell := &q.buffer[pos&q.mask]
 	for {
+		cell = &q.buffer[pos&q.mask]
 		seq := atomic.LoadInt64(&cell.sequence)
 		df := seq - (pos + 1)
 		if df == 0 {
-			*v = cell.value
-			atomic.StoreInt64(&cell.sequence, pos+q.mask+1)
 			q.recvx = pos + 1
-			return true
+			break
 		} else if df < 0 {
 			// empty
 			return false
 		}
 	}
+
+	*v = cell.value
+	atomic.StoreInt64(&cell.sequence, pos+q.mask+1)
+	return true
 }
