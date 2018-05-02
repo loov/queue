@@ -5,11 +5,11 @@ import (
 	"sync/atomic"
 )
 
-// MPSCrwMC is a MPSC queue using condition variables on the producer side
+// MPSCrMC is a MPSC queue using condition variables on the producer side
 // and MCRingBuffer style consumer batching.
 //
 // Not recommended.
-type MPSCrwMC struct {
+type MPSCrMC struct {
 	_ [8]uint64
 	// volatile
 	writeTo   int64
@@ -32,9 +32,9 @@ type MPSCrwMC struct {
 	drain   sync.Cond
 }
 
-// NewMPSCrwMC creates a new MPSCrwMC queue
-func NewMPSCrwMC(batchSize, size int) *MPSCrwMC {
-	q := &MPSCrwMC{}
+// NewMPSCrMC creates a new MPSCrMC queue
+func NewMPSCrMC(batchSize, size int) *MPSCrMC {
+	q := &MPSCrMC{}
 	q.reader.L = &q.mu
 	q.writers.L = &q.mu
 	q.drain.L = &q.mu
@@ -49,13 +49,13 @@ func NewMPSCrwMC(batchSize, size int) *MPSCrwMC {
 }
 
 // Cap returns number of elements this queue can hold before blocking
-func (q *MPSCrwMC) Cap() int { return len(q.buffer) }
+func (q *MPSCrMC) Cap() int { return len(q.buffer) }
 
 // MultipleProducers makes this a MP queue
-func (q *MPSCrwMC) MultipleProducers() {}
+func (q *MPSCrMC) MultipleProducers() {}
 
 // Send sends a value to the queue and blocks when it is full
-func (q *MPSCrwMC) Send(v Value) bool {
+func (q *MPSCrMC) Send(v Value) bool {
 	// grab a write location
 	writeTo := atomic.AddInt64(&q.writeTo, 1) - 1
 
@@ -84,15 +84,15 @@ func (q *MPSCrwMC) Send(v Value) bool {
 }
 
 // FlushSend is to implement interface, on this queue this is a nop
-func (q *MPSCrwMC) FlushSend() {}
+func (q *MPSCrMC) FlushSend() {}
 
 // Recv receives a value from the queue and blocks when it is empty
-func (q *MPSCrwMC) Recv(v *Value) bool { return q.recv(v, true) }
+func (q *MPSCrMC) Recv(v *Value) bool { return q.recv(v, true) }
 
 // TryRecv receives a value from the queue and returns when it is empty
-func (q *MPSCrwMC) TryRecv(v *Value) bool { return q.recv(v, false) }
+func (q *MPSCrMC) TryRecv(v *Value) bool { return q.recv(v, false) }
 
-func (q *MPSCrwMC) recv(v *Value, block bool) bool {
+func (q *MPSCrMC) recv(v *Value, block bool) bool {
 	localUnwritten := q.localUnwritten
 
 	if q.localNextRead >= localUnwritten {
@@ -124,7 +124,7 @@ func (q *MPSCrwMC) recv(v *Value, block bool) bool {
 }
 
 // FlushRecv propagates pending receive operations to the sender.
-func (q *MPSCrwMC) FlushRecv() {
+func (q *MPSCrMC) FlushRecv() {
 	q.mu.Lock()
 	atomic.StoreInt64(&q.nextRead, q.localNextRead)
 	q.localReadBatch = 0
