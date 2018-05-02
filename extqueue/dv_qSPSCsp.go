@@ -5,8 +5,7 @@ import (
 )
 
 // SPSCqspDV is a SPSC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
-//
-// This modifies the base algorithm by removing relevant atomic ops for Send and Recv
+// The base algorithm is modified by removing some atomic operations on the consumer and producer side.
 type SPSCqspDV struct {
 	_ [8]int64
 

@@ -4,10 +4,8 @@ import (
 	"sync/atomic"
 )
 
-// MPSCrsMC is a MPSC queue based on MCRingBuffer and Disruptor
-//
-// It uses similar consumer batching behavior,
-// sending uses shared Disruptor style waiting
+// MPSCrwMC is a MPSC queue using disruptor style waiting on the producer side
+// and MCRingBuffer style consumer batching.
 //
 // Not recommended.
 type MPSCrsMC struct {

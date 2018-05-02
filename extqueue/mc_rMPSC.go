@@ -5,7 +5,8 @@ import (
 	"sync/atomic"
 )
 
-// MPSCrwMC is a MPSC queue based on MCRingBuffer
+// MPSCrwMC is a MPSC queue using condition variables on the producer side
+// and MCRingBuffer style consumer batching.
 //
 // Not recommended.
 type MPSCrwMC struct {

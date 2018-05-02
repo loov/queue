@@ -4,9 +4,8 @@ import (
 	"sync/atomic"
 )
 
-// SPMCqsDV is a MPMC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
-//
-// This modifies the base algorithm by removing relevant atomic ops for Recv
+// SPMCqsDV is a MPMC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue.
+// The base algorithm is modified by removing some atomic operations on the producer side.
 type SPMCqsDV struct {
 	_ [8]int64
 
