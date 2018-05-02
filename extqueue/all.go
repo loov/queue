@@ -60,47 +60,11 @@
 // However, the most reliable way is to write a realistic benchmark for your situtation and
 // see what works the best. This package contains a convenient way to implement them.
 //
-//    func Benchmark(b *testing.B) {
-//    	// iterate over all implementations
-//    	for _, desc := range extqueue.Descs {
-//    		// detect which properties do we need
-//    		if !desc.MultipleProducers() || desc.Unbounded() {
-//    			continue
-//    		}
-//
-//    		// try different batch sizes
-//    		batchSizes := testsuite.BenchBatchSizes
-//    		if !desc.BatchSize() {
-//    			batchSizes = []int{0}
-//    		}
-//
-//    		// run a sub-benchmark for this implementation
-//    		b.Run(desc.Name, func(b *testing.B) {
-//    			b.Helper()
-//    			// iterate over all combinations of batchSizes and testSizes
-//    			for _, batchSize := range batchSizes {
-//    				for _, size := range testsuite.BenchSizes {
-//    					if size <= batchSize {
-//    						continue
-//    					}
-//
-//    					// use a naming scheme to identify between
-//    					name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-//    					b.Run(name, func(b *testing.B) {
-//    						b.Helper()
-//    						RunBenchmarks(b, func() testsuite.Queue {
-//    							return desc.Create(batchSize, size)
-//    						})
-//    					})
-//    				}
-//    			}
-//    		})
+//    All.Benchmark(b, func(b *testing.B, create func() testsuite.Queue) {
+//    	q := create()
+//    	if _, ok := q.(interface{ MultipleProducers() }); !ok {
+//    		b.Skip("does not support multiple producers")
 //    	}
-//    }
-//
-//    // write a benchmark for the queues, this should be outside of this function
-//    func RunBenchmarks(b *testing.B, create func() testsuite.Queue) {
-//    	// use sub benchmarks to test a particular aspect
 //    	b.Run("Basic", func(b *testing.B) {
 //    		q := create().(testsuite.MPSC)
 //    		testsuite.ProducerConsumerBenchmark(b,
@@ -116,33 +80,29 @@
 //    				}
 //    			})
 //    	})
-//    }
+//    })
+//
 package extqueue
 
 import (
+	"strconv"
+	"testing"
+
 	"github.com/loov/queue/testsuite"
 )
 
 ////go:generate go run all_gen.go -out all_test.go
 
+type Descs []*Desc
+
 type Desc struct {
 	Name   string
 	Flags  DescFlag
 	Create func(batchSize int, size int) testsuite.Queue
-	q      testsuite.Queue
 }
 
 func (desc *Desc) BatchSize() bool { return desc.Flags&Batched == Batched }
 func (desc *Desc) Unbounded() bool { return desc.Flags&Unbounded == Unbounded }
-
-func (desc *Desc) MultipleProducers() bool {
-	_, ok := desc.q.(interface{ MultipleProducers() })
-	return ok
-}
-func (desc *Desc) MultipleConsumers() bool {
-	_, ok := desc.q.(interface{ MultipleConsumers() })
-	return ok
-}
 
 type DescFlag int
 
@@ -152,30 +112,96 @@ const (
 	Unbounded
 )
 
-var Descs = []Desc{
-	{"MPMCcGo", Default, func(bs, s int) testsuite.Queue { return NewMPMCcGo(s) }, nil},
-	{"MPMCqGo", Default, func(bs, s int) testsuite.Queue { return NewMPMCqGo(s) }, nil},
-	{"MPMCqpGo", Default, func(bs, s int) testsuite.Queue { return NewMPMCqpGo(s) }, nil},
+var All = Descs{
+	{"MPMCcGo", Default, func(bs, s int) testsuite.Queue { return NewMPMCcGo(s) }},
+	{"MPMCqGo", Default, func(bs, s int) testsuite.Queue { return NewMPMCqGo(s) }},
+	{"MPMCqpGo", Default, func(bs, s int) testsuite.Queue { return NewMPMCqpGo(s) }},
 
-	{"SPSCrMC", Batched, func(bs, s int) testsuite.Queue { return NewSPSCrMC(bs, s) }, nil},
-	{"SPSCrsMC", Batched, func(bs, s int) testsuite.Queue { return NewSPSCrsMC(bs, s) }, nil},
-	{"MPSCrMC", Batched, func(bs, s int) testsuite.Queue { return NewMPSCrMC(bs, s) }, nil},
-	{"MPSCrsMC", Batched, func(bs, s int) testsuite.Queue { return NewMPSCrsMC(bs, s) }, nil},
+	{"SPSCrMC", Batched, func(bs, s int) testsuite.Queue { return NewSPSCrMC(bs, s) }},
+	{"SPSCrsMC", Batched, func(bs, s int) testsuite.Queue { return NewSPSCrsMC(bs, s) }},
+	{"MPSCrMC", Batched, func(bs, s int) testsuite.Queue { return NewMPSCrMC(bs, s) }},
+	{"MPSCrsMC", Batched, func(bs, s int) testsuite.Queue { return NewMPSCrsMC(bs, s) }},
 
-	{"SPSCnsDV", Unbounded, func(bs, s int) testsuite.Queue { return NewSPSCnsDV() }, nil},
-	{"MPSCnsDV", Unbounded, func(bs, s int) testsuite.Queue { return NewMPSCnsDV() }, nil},
-	{"MPSCnsiDV", Unbounded, func(bs, s int) testsuite.Queue { return NewMPSCnsiDV() }, nil},
+	{"SPSCnsDV", Unbounded, func(bs, s int) testsuite.Queue { return NewSPSCnsDV() }},
+	{"MPSCnsDV", Unbounded, func(bs, s int) testsuite.Queue { return NewMPSCnsDV() }},
+	{"MPSCnsiDV", Unbounded, func(bs, s int) testsuite.Queue { return NewMPSCnsiDV() }},
 
-	{"MPMCqsDV", Default, func(bs, s int) testsuite.Queue { return NewMPMCqsDV(s) }, nil},
-	{"MPMCqspDV", Default, func(bs, s int) testsuite.Queue { return NewMPMCqspDV(s) }, nil},
-	{"SPMCqsDV", Default, func(bs, s int) testsuite.Queue { return NewSPMCqsDV(s) }, nil},
-	{"SPMCqspDV", Default, func(bs, s int) testsuite.Queue { return NewSPMCqspDV(s) }, nil},
-	{"SPSCqsDV", Default, func(bs, s int) testsuite.Queue { return NewSPSCqsDV(s) }, nil},
-	{"SPSCqspDV", Default, func(bs, s int) testsuite.Queue { return NewSPSCqspDV(s) }, nil},
+	{"MPMCqsDV", Default, func(bs, s int) testsuite.Queue { return NewMPMCqsDV(s) }},
+	{"MPMCqspDV", Default, func(bs, s int) testsuite.Queue { return NewMPMCqspDV(s) }},
+	{"SPMCqsDV", Default, func(bs, s int) testsuite.Queue { return NewSPMCqsDV(s) }},
+	{"SPMCqspDV", Default, func(bs, s int) testsuite.Queue { return NewSPMCqspDV(s) }},
+	{"SPSCqsDV", Default, func(bs, s int) testsuite.Queue { return NewSPSCqsDV(s) }},
+	{"SPSCqspDV", Default, func(bs, s int) testsuite.Queue { return NewSPSCqspDV(s) }},
 }
 
-func init() {
-	for i := range Descs {
-		Descs[i].q = Descs[i].Create(2, 2)
+func (descs *Descs) Append(list ...*Desc) {
+	*descs = append(*descs, list...)
+}
+
+func (descs Descs) Test(t *testing.T, test func(t *testing.T, create func() testsuite.Queue)) {
+	t.Helper()
+	for _, desc := range descs {
+		batchSizes := testsuite.BatchSizes
+		if !desc.BatchSize() {
+			batchSizes = []int{0}
+		}
+
+		testSizes := testsuite.TestSizes
+		if desc.Unbounded() {
+			testSizes = []int{0}
+		}
+
+		t.Run(desc.Name, func(t *testing.T) {
+			t.Helper()
+			for _, batchSize := range batchSizes {
+				for _, size := range testSizes {
+					if size != 0 && size <= batchSize {
+						continue
+					}
+
+					name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
+					t.Run(name, func(t *testing.T) {
+						t.Helper()
+						test(t, func() testsuite.Queue {
+							return desc.Create(batchSize, size)
+						})
+					})
+				}
+			}
+		})
+	}
+}
+
+func (descs Descs) Benchmark(b *testing.B, bench func(b *testing.B, create func() testsuite.Queue)) {
+	b.Helper()
+	for _, desc := range descs {
+		batchSizes := testsuite.BenchBatchSizes
+		if !desc.BatchSize() {
+			batchSizes = []int{0}
+		}
+
+		benchSizes := testsuite.BenchSizes
+		if desc.Unbounded() {
+			benchSizes = []int{0}
+		}
+
+		b.Run(desc.Name, func(b *testing.B) {
+			b.Helper()
+			for _, batchSize := range batchSizes {
+				for _, size := range benchSizes {
+					if size != 0 && size <= batchSize {
+						continue
+					}
+
+					name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
+					b.Run(name, func(b *testing.B) {
+						b.Helper()
+						bench(b, func() testsuite.Queue {
+							return desc.Create(batchSize, size)
+						})
+					})
+				}
+			}
+		})
 	}
 }
