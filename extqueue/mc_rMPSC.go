@@ -1,16 +1,14 @@
 package extqueue
 
 import (
+	"sync"
 	"sync/atomic"
 )
 
-// MPSCrsMC is a MPSC queue based on MCRingBuffer and Disruptor
-//
-// It uses similar consumer batching behavior,
-// sending uses shared Disruptor style waiting
+// MPSCrwMC is a MPSC queue based on MCRingBuffer
 //
 // Not recommended.
-type MPSCrsMC struct {
+type MPSCrwMC struct {
 	_ [8]uint64
 	// volatile
 	writeTo   int64
@@ -26,65 +24,90 @@ type MPSCrsMC struct {
 	batchSize int64
 	mask      int64
 	buffer    []Value
+	// sleeping
+	mu      sync.Mutex
+	reader  sync.Cond
+	writers sync.Cond
+	drain   sync.Cond
 }
 
-// NewMPSCrsMC creates a new MPSCrsMC queue
-func NewMPSCrsMC(batchSize, size int) *MPSCrsMC {
-	q := &MPSCrsMC{}
+// NewMPSCrwMC creates a new MPSCrwMC queue
+func NewMPSCrwMC(batchSize, size int) *MPSCrwMC {
+	q := &MPSCrwMC{}
+	q.reader.L = &q.mu
+	q.writers.L = &q.mu
+	q.drain.L = &q.mu
+
 	q.batchSize = int64(batchSize)
 	if size < batchSize {
 		size = batchSize
 	}
 	q.buffer = make([]Value, int(nextPowerOfTwo(uint32(size))))
 	q.mask = int64(len(q.buffer) - 1)
-
 	return q
 }
 
 // Cap returns number of elements this queue can hold before blocking
-func (q *MPSCrsMC) Cap() int { return len(q.buffer) }
+func (q *MPSCrwMC) Cap() int { return len(q.buffer) }
 
 // MultipleProducers makes this a MP queue
-func (q *MPSCrsMC) MultipleProducers() {}
+func (q *MPSCrwMC) MultipleProducers() {}
 
 // Send sends a value to the queue and blocks when it is full
-func (q *MPSCrsMC) Send(v Value) bool {
+func (q *MPSCrwMC) Send(v Value) bool {
 	// grab a write location
 	writeTo := atomic.AddInt64(&q.writeTo, 1) - 1
 
 	// channel is full, wait for it to drain
-	for try := 0; atomic.LoadInt64(&q.nextRead)+q.mask < writeTo; spin(&try) {
+	if atomic.LoadInt64(&q.nextRead)+q.mask < writeTo {
+		q.mu.Lock()
+		for q.nextRead+q.mask < writeTo {
+			q.writers.Wait()
+		}
+		q.mu.Unlock()
 	}
 
 	// now we can write
 	q.buffer[writeTo&q.mask] = v
 
-	// wait for previous writes to complete
-	for try := 0; writeTo != atomic.LoadInt64(&q.unwritten); spin(&try) {
+	q.mu.Lock()
+	for writeTo != q.unwritten {
+		q.drain.Wait()
 	}
-
-	atomic.StoreInt64(&q.unwritten, writeTo+1)
+	q.unwritten = writeTo + 1
+	q.reader.Signal()
+	q.drain.Broadcast()
+	q.mu.Unlock()
 
 	return true
 }
 
 // FlushSend is to implement interface, on this queue this is a nop
-func (q *MPSCrsMC) FlushSend() {}
+func (q *MPSCrwMC) FlushSend() {}
 
 // Recv receives a value from the queue and blocks when it is empty
-func (q *MPSCrsMC) Recv(v *Value) bool { return q.recv(v, true) }
+func (q *MPSCrwMC) Recv(v *Value) bool { return q.recv(v, true) }
 
 // TryRecv receives a value from the queue and returns when it is empty
-func (q *MPSCrsMC) TryRecv(v *Value) bool { return q.recv(v, false) }
+func (q *MPSCrwMC) TryRecv(v *Value) bool { return q.recv(v, false) }
 
-func (q *MPSCrsMC) recv(v *Value, block bool) bool {
+func (q *MPSCrwMC) recv(v *Value, block bool) bool {
 	localUnwritten := q.localUnwritten
-	for try := 0; q.localNextRead >= localUnwritten; spin(&try) {
+
+	if q.localNextRead >= localUnwritten {
+		q.mu.Lock()
 		localUnwritten = atomic.LoadInt64(&q.unwritten)
-		if !block {
-			return false
+		for q.localNextRead >= localUnwritten {
+			if !block {
+				q.mu.Unlock()
+				return false
+			}
+			q.reader.Wait()
+			localUnwritten = atomic.LoadInt64(&q.unwritten)
 		}
+		q.mu.Unlock()
 	}
+
 	q.localUnwritten = localUnwritten
 
 	*v = q.buffer[q.localNextRead&q.mask]
@@ -100,7 +123,10 @@ func (q *MPSCrsMC) recv(v *Value, block bool) bool {
 }
 
 // FlushRecv propagates pending receive operations to the sender.
-func (q *MPSCrsMC) FlushRecv() {
+func (q *MPSCrwMC) FlushRecv() {
+	q.mu.Lock()
 	atomic.StoreInt64(&q.nextRead, q.localNextRead)
 	q.localReadBatch = 0
+	q.writers.Broadcast()
+	q.mu.Unlock()
 }

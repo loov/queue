@@ -22,11 +22,12 @@ type SPSCrMC struct {
 	writeBatch int64
 	_          [8 - 3]uint64
 	// constant
-	mu        sync.Mutex
-	reader    sync.Cond
-	writer    sync.Cond
 	batchSize int64
 	buffer    []Value
+	// sleeping
+	mu     sync.Mutex
+	reader sync.Cond
+	writer sync.Cond
 }
 
 // NewSPSCrMC creates a new SPSCrMC queue
@@ -55,12 +56,6 @@ func (q *SPSCrMC) Send(v Value) bool { return q.send(v, true) }
 
 // TrySend tries to send a value to the queue and returns immediately when it is full
 func (q *SPSCrMC) TrySend(v Value) bool { return q.send(v, false) }
-
-// Recv receives a value from the queue and blocks when it is empty
-func (q *SPSCrMC) Recv(v *Value) bool { return q.recv(v, true) }
-
-// TryRecv receives a value from the queue and returns when it is empty
-func (q *SPSCrMC) TryRecv(v *Value) bool { return q.recv(v, false) }
 
 func (q *SPSCrMC) send(v Value, block bool) bool {
 	afterNextWrite := q.next(q.nextWrite)
@@ -93,6 +88,12 @@ func (q *SPSCrMC) FlushSend() {
 	q.reader.Signal()
 	q.mu.Unlock()
 }
+
+// Recv receives a value from the queue and blocks when it is empty
+func (q *SPSCrMC) Recv(v *Value) bool { return q.recv(v, true) }
+
+// TryRecv receives a value from the queue and returns when it is empty
+func (q *SPSCrMC) TryRecv(v *Value) bool { return q.recv(v, false) }
 
 func (q *SPSCrMC) recv(v *Value, block bool) bool {
 	if q.nextRead == q.localWrite {
