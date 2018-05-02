@@ -31,7 +31,6 @@ func benchSPSC(b *testing.B, caps Capability, ctor func() Queue) {
 				var v Value
 				q.Send(v)
 				q.Recv(&v)
-				panic("shouldn't end up here")
 			}
 		}
 	})
