@@ -6,8 +6,6 @@ import (
 
 // MPSCrwMC is a MPSC queue using disruptor style waiting on the producer side
 // and MCRingBuffer style consumer batching.
-//
-// Not recommended.
 type MPSCrsMC struct {
 	_ [8]uint64
 	// volatile

@@ -14,6 +14,8 @@ import (
 	"strings"
 )
 
+var experiment = flag.String("experiment", "tip", "")
+
 func main() {
 	flag.Parse()
 
@@ -29,7 +31,7 @@ func main() {
 		in = f
 	}
 
-	if outfile := flag.Arg(0); outfile != "-" && outfile != "" {
+	if outfile := flag.Arg(1); outfile != "-" && outfile != "" {
 		f, err := os.Create(outfile)
 		if err != nil {
 			log.Fatal(err)
@@ -38,7 +40,7 @@ func main() {
 		out = f
 	}
 
-	fmt.Fprintf(out, "Queue, Size, Cores, Setup, Test, Time\n")
+	fmt.Fprintf(out, "Experiment, Queue, Size, Cores, Setup, Test, Time\n")
 
 	rx := regexp.MustCompile(`[/\t -]+`)
 
@@ -81,6 +83,6 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Fprintf(out, "%v, %v, %v, %v, %v, %.2f\n", queueName, queueSize, cores, setup, test, time/repeatCount)
+		fmt.Fprintf(out, "%v, %v, %v, %v, %v, %v, %.2f\n", *experiment, queueName, queueSize, cores, setup, test, time/repeatCount)
 	}
 }
