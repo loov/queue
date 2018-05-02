@@ -16,6 +16,8 @@ type MPMCqGo struct {
 	mu    sync.Mutex
 	sendq sync.Cond
 	recvq sync.Cond
+
+	sendw, recvw int
 }
 
 // NewMPMCqGo creates a new MPMCqGo queue
@@ -82,7 +84,9 @@ func (q *MPMCqGo) trySend(value *Value, block bool) bool {
 				// try to release a receiver
 				// TODO: avoid lock when noone is waiting
 				q.mu.Lock()
-				q.recvq.Signal()
+				if q.recvw > 0 {
+					q.recvq.Signal()
+				}
 				q.mu.Unlock()
 				return true
 			}
@@ -106,8 +110,10 @@ func (q *MPMCqGo) trySend(value *Value, block bool) bool {
 				q.mu.Unlock()
 				continue
 			}
+			q.sendw++
 			//fmt.Printf("send: sleep %v\n", pos)
 			q.sendq.Wait()
+			q.sendw--
 			q.mu.Unlock()
 		}
 		// The element has already been written on this seq,
@@ -141,7 +147,9 @@ func (q *MPMCqGo) tryRecv(result *Value, block bool) bool {
 				atomic.StoreUint32(&elem.sequence, eseq+2)
 				// try to release a sender
 				q.mu.Lock()
-				q.sendq.Signal()
+				if q.sendw > 0 {
+					q.sendq.Signal()
+				}
 				q.mu.Unlock()
 				return true
 			}
@@ -167,7 +175,9 @@ func (q *MPMCqGo) tryRecv(result *Value, block bool) bool {
 				q.mu.Unlock()
 				continue
 			}
+			q.recvw++
 			q.recvq.Wait()
+			q.recvw--
 			q.mu.Unlock()
 		}
 		// The element has already been read on this seq,

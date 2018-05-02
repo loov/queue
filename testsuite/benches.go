@@ -7,7 +7,7 @@ import (
 )
 
 func benchCommon(b *testing.B, caps Capability, ctor func() Queue) {
-	b.Run("Create", func(b *testing.B) {
+	b.Run("Create/x1", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			_ = ctor()
 		}
