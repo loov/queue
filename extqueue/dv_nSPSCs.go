@@ -7,7 +7,6 @@ import (
 
 // SPSCnsDV is a SPSC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/unbounded-spsc-queue
 type SPSCnsDV struct {
-	_    [8]uint64
 	stub Node
 	_    [7]uint64
 	// producer

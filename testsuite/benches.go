@@ -15,7 +15,7 @@ func benchCommon(b *testing.B, caps Capability, ctor func() Queue) {
 }
 
 func benchSPSC(b *testing.B, caps Capability, ctor func() Queue) {
-	b.Run("Single", func(b *testing.B) {
+	b.Run("Single/x1", func(b *testing.B) {
 		q := ctor().(SPSC)
 		b.ResetTimer()
 		if flusher, ok := q.(Flusher); ok {
@@ -66,7 +66,7 @@ func benchSPSC(b *testing.B, caps Capability, ctor func() Queue) {
 		if work > 0 {
 			suffix = "Work" + strconv.Itoa(work)
 		}
-		b.Run("ProducerConsumer"+suffix, func(b *testing.B) {
+		b.Run("ProducerConsumer"+suffix+"/x1", func(b *testing.B) {
 			q := ctor().(SPSC)
 			b.ResetTimer()
 			var wg sync.WaitGroup
@@ -92,7 +92,7 @@ func benchSPSC(b *testing.B, caps Capability, ctor func() Queue) {
 			wg.Wait()
 		})
 
-		b.Run("PingPong"+suffix, func(b *testing.B) {
+		b.Run("PingPong"+suffix+"/x1", func(b *testing.B) {
 			q1, q2 := ctor().(SPSC), ctor().(SPSC)
 			b.ResetTimer()
 			var wg sync.WaitGroup
@@ -272,7 +272,7 @@ func benchMPMC(b *testing.B, caps Capability, ctor func() Queue) {
 }
 
 func benchNonblockSPSC(b *testing.B, caps Capability, ctor func() Queue) {
-	b.Run("Single", func(b *testing.B) {
+	b.Run("Single/x1", func(b *testing.B) {
 		q := ctor().(NonblockingSPSC)
 		b.ResetTimer()
 		if flusher, ok := q.(Flusher); ok {

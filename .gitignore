@@ -9,5 +9,8 @@
 
 x.*.go
 
+*.txt
+*.csv
+
 *.sublime-workspace
 .vscode

@@ -7,7 +7,6 @@ import (
 
 // MPSCnsiDV is a MPSC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/intrusive-mpsc-node-based-queue
 type MPSCnsiDV struct {
-	_    [8]uint64
 	stub Node
 	_    [7]uint64
 	head unsafe.Pointer

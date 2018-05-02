@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+func wait() {
+	runtime.Gosched()
+}
+
 func spin(v *int) {
 	*v++
 	if *v > 256 {
