@@ -59,12 +59,10 @@
 //
 // However, the most reliable way is to write a realistic benchmark for your situtation and
 // see what works the best. This package contains a convenient way to implement them.
-// Please see ExampleDescs_Benchmark.
-//
 //
 //    func Benchmark(b *testing.B) {
 //    	// iterate over all implementations
-//    	for _, desc := range Descs {
+//    	for _, desc := range extqueue.Descs {
 //    		// detect which properties do we need
 //    		if !desc.MultipleProducers() || desc.Unbounded() {
 //    			continue
