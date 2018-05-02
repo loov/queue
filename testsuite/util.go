@@ -85,9 +85,6 @@ func MustRecvIn(q NonblockingSPSC, v *Value, dur time.Duration) bool {
 func ProducerConsumer(t *testing.T, NP, NC int, producer, consumer func(id int) error) {
 	t.Helper()
 
-	var wg sync.WaitGroup
-	wg.Add(NP + NC)
-
 	errs := make(chan error, NP+NC)
 	for i := 0; i < NP+NC; i++ {
 		go func(id int) {
@@ -118,4 +115,24 @@ func ProducerConsumer(t *testing.T, NP, NC int, producer, consumer func(id int) 
 			t.Fatal(err)
 		}
 	}
+}
+
+func ProducerConsumerBenchmark(b *testing.B, NP, NC int, producer, consumer func(id int)) {
+	b.Helper()
+
+	var wg sync.WaitGroup
+	wg.Add(NP + NC)
+
+	for i := 0; i < NP+NC; i++ {
+		go func(id int) {
+			defer wg.Done()
+			if id < NP {
+				producer(id)
+			} else {
+				consumer(id)
+			}
+		}(i)
+	}
+
+	wg.Wait()
 }
