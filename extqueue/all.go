@@ -130,6 +130,8 @@ var All = Descs{
 	{"MPMCqspDV", Default, func(bs, s int) testsuite.Queue { return NewMPMCqspDV(s) }},
 	{"SPMCqsDV", Default, func(bs, s int) testsuite.Queue { return NewSPMCqsDV(s) }},
 	{"SPMCqspDV", Default, func(bs, s int) testsuite.Queue { return NewSPMCqspDV(s) }},
+	{"MPSCqsDV", Default, func(bs, s int) testsuite.Queue { return NewMPSCqsDV(s) }},
+	{"MPSCqspDV", Default, func(bs, s int) testsuite.Queue { return NewMPSCqspDV(s) }},
 	{"SPSCqsDV", Default, func(bs, s int) testsuite.Queue { return NewSPSCqsDV(s) }},
 	{"SPSCqspDV", Default, func(bs, s int) testsuite.Queue { return NewSPSCqspDV(s) }},
 }
