@@ -12,6 +12,9 @@ func testSPSC(t *testing.T, caps Capability, ctor func() Queue) {
 	t.Run("Single", func(t *testing.T) {
 		for _, count := range TestCount {
 			q := ctor().(SPSC)
+			if skipRedundant(q, count) {
+				continue
+			}
 			for i := 0; i < count; i++ {
 				exp := Value(i)
 				q.Send(exp)
@@ -29,6 +32,10 @@ func testSPSC(t *testing.T, caps Capability, ctor func() Queue) {
 	t.Run("Basic", func(t *testing.T) {
 		for _, count := range TestCount {
 			q := ctor().(SPSC)
+			if skipRedundant(q, count) {
+				continue
+			}
+
 			ProducerConsumer(t, 1, 1, func(int) error {
 				for i := 0; i < count; i++ {
 					if !q.Send(Value(i + 1)) {
@@ -107,6 +114,9 @@ func testMPSC(t *testing.T, caps Capability, ctor func() Queue) {
 	t.Run("Basic", func(t *testing.T) {
 		for _, count := range TestCount {
 			q := ctor().(MPSC)
+			if skipRedundant(q, count) {
+				continue
+			}
 			ProducerConsumer(t,
 				TestProcs, 1,
 				func(id int) error {
@@ -140,6 +150,9 @@ func testSPMC(t *testing.T, caps Capability, ctor func() Queue) {
 	t.Run("Basic", func(t *testing.T) {
 		for _, count := range TestCount {
 			q := ctor().(SPMC)
+			if skipRedundant(q, count) {
+				continue
+			}
 			ProducerConsumer(t,
 				1, TestProcs,
 				func(int) error {
@@ -173,6 +186,9 @@ func testMPMC(t *testing.T, caps Capability, ctor func() Queue) {
 	t.Run("SendRecv", func(t *testing.T) {
 		for _, count := range TestCount {
 			q := ctor().(MPMC)
+			if skipRedundant(q, count) {
+				continue
+			}
 			ProducerConsumer(t,
 				TestProcs, 0,
 				func(id int) error {
@@ -205,6 +221,9 @@ func testMPMC(t *testing.T, caps Capability, ctor func() Queue) {
 	t.Run("Basic", func(t *testing.T) {
 		for _, count := range TestCount {
 			q := ctor().(MPMC)
+			if skipRedundant(q, count) {
+				continue
+			}
 			ProducerConsumer(t,
 				TestProcs, TestProcs,
 				func(id int) error {
@@ -240,6 +259,9 @@ func testNonblockSPSC(t *testing.T, caps Capability, ctor func() Queue) {
 	t.Run("Single", func(t *testing.T) {
 		for _, count := range TestCount {
 			q := ctor().(NonblockingSPSC)
+			if skipRedundant(q, count) {
+				continue
+			}
 			for i := 0; i < count; i++ {
 				exp := Value(i)
 				if !q.TrySend(exp) {
@@ -261,6 +283,9 @@ func testNonblockSPSC(t *testing.T, caps Capability, ctor func() Queue) {
 	t.Run("Basic", func(t *testing.T) {
 		for _, count := range TestCount {
 			q := ctor().(NonblockingSPSC)
+			if skipRedundant(q, count) {
+				continue
+			}
 			ProducerConsumer(t,
 				1, 1,
 				func(id int) error {
@@ -312,6 +337,9 @@ func testNonblockMPSC(t *testing.T, caps Capability, ctor func() Queue) {
 	t.Run("Basic", func(t *testing.T) {
 		for _, count := range TestCount {
 			q := ctor().(NonblockingMPSC)
+			if skipRedundant(q, count) {
+				continue
+			}
 
 			ProducerConsumer(t,
 				TestProcs, 1,
@@ -346,6 +374,9 @@ func testNonblockSPMC(t *testing.T, caps Capability, ctor func() Queue) {
 	t.Run("Basic", func(t *testing.T) {
 		for _, count := range TestCount {
 			q := ctor().(NonblockingSPMC)
+			if skipRedundant(q, count) {
+				continue
+			}
 
 			ProducerConsumer(t,
 				1, TestProcs,
@@ -380,6 +411,9 @@ func testNonblockMPMC(t *testing.T, caps Capability, ctor func() Queue) {
 	t.Run("SendRecv", func(t *testing.T) {
 		for _, count := range TestCount {
 			q := ctor().(NonblockingMPMC)
+			if skipRedundant(q, count) {
+				continue
+			}
 			ProducerConsumer(t,
 				TestProcs, 0,
 				func(id int) error {
@@ -412,6 +446,9 @@ func testNonblockMPMC(t *testing.T, caps Capability, ctor func() Queue) {
 	t.Run("Basic", func(t *testing.T) {
 		for _, count := range TestCount {
 			q := ctor().(NonblockingMPMC)
+			if skipRedundant(q, count) {
+				continue
+			}
 			ProducerConsumer(t,
 				TestProcs, TestProcs,
 				func(id int) error {
