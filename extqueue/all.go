@@ -85,125 +85,31 @@
 package extqueue
 
 import (
-	"strconv"
-	"testing"
-
 	"github.com/loov/queue/testsuite"
 )
 
 ////go:generate go run all_gen.go -out all_test.go
 
-type Descs []*Desc
+var All = testsuite.Descs{
+	{"MPMCcGo", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCcGo(s) }},
+	{"MPMCqGo", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCqGo(s) }},
+	{"MPMCqpGo", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCqpGo(s) }},
 
-type Desc struct {
-	Name   string
-	Flags  DescFlag
-	Create func(batchSize int, size int) testsuite.Queue
-}
+	{"SPSCrMC", testsuite.ParamBatchSizeAndSize, func(bs, s int) testsuite.Queue { return NewSPSCrMC(bs, s) }},
+	{"SPSCrsMC", testsuite.ParamBatchSizeAndSize, func(bs, s int) testsuite.Queue { return NewSPSCrsMC(bs, s) }},
+	{"MPSCrMC", testsuite.ParamBatchSizeAndSize, func(bs, s int) testsuite.Queue { return NewMPSCrMC(bs, s) }},
+	{"MPSCrsMC", testsuite.ParamBatchSizeAndSize, func(bs, s int) testsuite.Queue { return NewMPSCrsMC(bs, s) }},
 
-func (desc *Desc) BatchSize() bool { return desc.Flags&Batched == Batched }
-func (desc *Desc) Unbounded() bool { return desc.Flags&Unbounded == Unbounded }
+	{"SPSCnsDV", testsuite.ParamNone, func(bs, s int) testsuite.Queue { return NewSPSCnsDV() }},
+	{"MPSCnsDV", testsuite.ParamNone, func(bs, s int) testsuite.Queue { return NewMPSCnsDV() }},
+	{"MPSCnsiDV", testsuite.ParamNone, func(bs, s int) testsuite.Queue { return NewMPSCnsiDV() }},
 
-type DescFlag int
-
-const (
-	Default = DescFlag(1 << iota)
-	Batched
-	Unbounded
-)
-
-var All = Descs{
-	{"MPMCcGo", Default, func(bs, s int) testsuite.Queue { return NewMPMCcGo(s) }},
-	{"MPMCqGo", Default, func(bs, s int) testsuite.Queue { return NewMPMCqGo(s) }},
-	{"MPMCqpGo", Default, func(bs, s int) testsuite.Queue { return NewMPMCqpGo(s) }},
-
-	{"SPSCrMC", Batched, func(bs, s int) testsuite.Queue { return NewSPSCrMC(bs, s) }},
-	{"SPSCrsMC", Batched, func(bs, s int) testsuite.Queue { return NewSPSCrsMC(bs, s) }},
-	{"MPSCrMC", Batched, func(bs, s int) testsuite.Queue { return NewMPSCrMC(bs, s) }},
-	{"MPSCrsMC", Batched, func(bs, s int) testsuite.Queue { return NewMPSCrsMC(bs, s) }},
-
-	{"SPSCnsDV", Unbounded, func(bs, s int) testsuite.Queue { return NewSPSCnsDV() }},
-	{"MPSCnsDV", Unbounded, func(bs, s int) testsuite.Queue { return NewMPSCnsDV() }},
-	{"MPSCnsiDV", Unbounded, func(bs, s int) testsuite.Queue { return NewMPSCnsiDV() }},
-
-	{"MPMCqsDV", Default, func(bs, s int) testsuite.Queue { return NewMPMCqsDV(s) }},
-	{"MPMCqspDV", Default, func(bs, s int) testsuite.Queue { return NewMPMCqspDV(s) }},
-	{"SPMCqsDV", Default, func(bs, s int) testsuite.Queue { return NewSPMCqsDV(s) }},
-	{"SPMCqspDV", Default, func(bs, s int) testsuite.Queue { return NewSPMCqspDV(s) }},
-	{"MPSCqsDV", Default, func(bs, s int) testsuite.Queue { return NewMPSCqsDV(s) }},
-	{"MPSCqspDV", Default, func(bs, s int) testsuite.Queue { return NewMPSCqspDV(s) }},
-	{"SPSCqsDV", Default, func(bs, s int) testsuite.Queue { return NewSPSCqsDV(s) }},
-	{"SPSCqspDV", Default, func(bs, s int) testsuite.Queue { return NewSPSCqspDV(s) }},
-}
-
-func (descs *Descs) Append(list ...*Desc) {
-	*descs = append(*descs, list...)
-}
-
-func (descs Descs) Test(t *testing.T, test func(t *testing.T, create func() testsuite.Queue)) {
-	t.Helper()
-	for _, desc := range descs {
-		batchSizes := testsuite.BatchSizes
-		if !desc.BatchSize() {
-			batchSizes = []int{0}
-		}
-
-		testSizes := testsuite.TestSizes
-		if desc.Unbounded() {
-			testSizes = []int{0}
-		}
-
-		t.Run(desc.Name, func(t *testing.T) {
-			t.Helper()
-			for _, batchSize := range batchSizes {
-				for _, size := range testSizes {
-					if size != 0 && size <= batchSize {
-						continue
-					}
-
-					name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-					t.Run(name, func(t *testing.T) {
-						t.Helper()
-						test(t, func() testsuite.Queue {
-							return desc.Create(batchSize, size)
-						})
-					})
-				}
-			}
-		})
-	}
-}
-
-func (descs Descs) Benchmark(b *testing.B, bench func(b *testing.B, create func() testsuite.Queue)) {
-	b.Helper()
-	for _, desc := range descs {
-		batchSizes := testsuite.BenchBatchSizes
-		if !desc.BatchSize() {
-			batchSizes = []int{0}
-		}
-
-		benchSizes := testsuite.BenchSizes
-		if desc.Unbounded() {
-			benchSizes = []int{0}
-		}
-
-		b.Run(desc.Name, func(b *testing.B) {
-			b.Helper()
-			for _, batchSize := range batchSizes {
-				for _, size := range benchSizes {
-					if size != 0 && size <= batchSize {
-						continue
-					}
-
-					name := "b" + strconv.Itoa(batchSize) + "s" + strconv.Itoa(size)
-					b.Run(name, func(b *testing.B) {
-						b.Helper()
-						bench(b, func() testsuite.Queue {
-							return desc.Create(batchSize, size)
-						})
-					})
-				}
-			}
-		})
-	}
+	{"MPMCqsDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCqsDV(s) }},
+	{"MPMCqspDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCqspDV(s) }},
+	{"SPMCqsDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewSPMCqsDV(s) }},
+	{"SPMCqspDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewSPMCqspDV(s) }},
+	{"MPSCqsDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPSCqsDV(s) }},
+	{"MPSCqspDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPSCqspDV(s) }},
+	{"SPSCqsDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewSPSCqsDV(s) }},
+	{"SPSCqspDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewSPSCqspDV(s) }},
 }
