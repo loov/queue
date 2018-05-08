@@ -60,6 +60,38 @@ func benchSPSC(b *testing.B, caps Capability, ctor func() Queue) {
 		})
 	})
 
+	b.Run("Multiple/x100", func(b *testing.B) {
+		const P = 1000
+		qs := [P]SPSC{}
+		for i := range qs {
+			qs[i] = ctor().(SPSC)
+		}
+
+		b.ResetTimer()
+
+		var wg sync.WaitGroup
+		wg.Add(P * 2)
+		for i := 0; i < P; i++ {
+			go func(q SPSC) {
+				for i := 0; i < b.N; i++ {
+					var v Value
+					q.Send(v)
+				}
+				FlushSend(q)
+				wg.Done()
+			}(qs[i])
+			go func(q SPSC) {
+				for i := 0; i < b.N; i++ {
+					var v Value
+					q.Recv(&v)
+				}
+				FlushRecv(q)
+				wg.Done()
+			}(qs[i])
+		}
+		wg.Wait()
+	})
+
 	for _, work := range BenchWork {
 		suffix := ""
 		if work > 0 {

@@ -29,6 +29,6 @@ func (q *MPSCnwFL) Recv(v *Value) bool {
 
 func init() {
 	All.Append(
-		&Desc{"MPSCnwFL", Unbounded, func(bs, s int) testsuite.Queue { return NewMPSCnwFL() }},
+		&testsuite.Desc{"MPSCnwFL", testsuite.ParamNone, func(bs, s int) testsuite.Queue { return NewMPSCnwFL() }},
 	)
 }
