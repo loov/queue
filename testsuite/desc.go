@@ -54,7 +54,7 @@ func (descs Descs) Test(t *testing.T, test func(t *testing.T, create func() Queu
 		}
 
 		testSizes := TestSizes
-		if desc.HasSizeParam() {
+		if !desc.HasSizeParam() {
 			testSizes = []int{0}
 		}
 
@@ -88,7 +88,7 @@ func (descs Descs) Benchmark(b *testing.B, bench func(b *testing.B, create func(
 		}
 
 		benchSizes := BenchSizes
-		if desc.HasSizeParam() {
+		if !desc.HasSizeParam() {
 			benchSizes = []int{0}
 		}
 
