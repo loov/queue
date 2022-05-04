@@ -5,10 +5,10 @@ import (
 )
 
 // MPMCqsDV is a MPMC queue based on http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
-type MPMCqsDV struct {
+type MPMCqsDV[T any] struct {
 	_      [8]int64
 	mask   int64
-	buffer []seqValue
+	buffer []seqValue[T]
 	_      [4]int64
 	sendx  int64
 	_      [7]int64
@@ -17,14 +17,14 @@ type MPMCqsDV struct {
 }
 
 // NewMPMCqsDV creates a NewMPMCqsDV queue
-func NewMPMCqsDV(size int) *MPMCqsDV {
+func NewMPMCqsDV[T any](size int) *MPMCqsDV[T] {
 	if size <= 1 {
 		size = 2
 	}
 	size = int(nextPowerOfTwo(uint32(size)))
 
-	q := &MPMCqsDV{}
-	q.buffer = make([]seqValue, size)
+	q := &MPMCqsDV[T]{}
+	q.buffer = make([]seqValue[T], size)
 	q.mask = int64(size) - 1
 	for i := range q.buffer {
 		q.buffer[i].sequence = int64(i)
@@ -34,16 +34,16 @@ func NewMPMCqsDV(size int) *MPMCqsDV {
 }
 
 // Cap returns number of elements this queue can hold before blocking
-func (q *MPMCqsDV) Cap() int { return len(q.buffer) }
+func (q *MPMCqsDV[T]) Cap() int { return len(q.buffer) }
 
 // MultipleConsumers makes this a MC queue
-func (q *MPMCqsDV) MultipleConsumers() {}
+func (q *MPMCqsDV[T]) MultipleConsumers() {}
 
 // MultipleProducers makes this a MP queue
-func (q *MPMCqsDV) MultipleProducers() {}
+func (q *MPMCqsDV[T]) MultipleProducers() {}
 
 // Send sends a value to the queue and blocks when it is full
-func (q *MPMCqsDV) Send(v Value) bool {
+func (q *MPMCqsDV[T]) Send(v T) bool {
 	for wait := 0; ; spin(&wait) {
 		if q.TrySend(v) {
 			return true
@@ -52,8 +52,8 @@ func (q *MPMCqsDV) Send(v Value) bool {
 }
 
 // TrySend tries to send a value to the queue and returns immediately when it is full
-func (q *MPMCqsDV) TrySend(v Value) bool {
-	var cell *seqValue
+func (q *MPMCqsDV[T]) TrySend(v T) bool {
+	var cell *seqValue[T]
 	pos := atomic.LoadInt64(&q.sendx)
 	for {
 		cell = &q.buffer[pos&q.mask]
@@ -77,7 +77,7 @@ func (q *MPMCqsDV) TrySend(v Value) bool {
 }
 
 // Recv receives a value from the queue and blocks when it is empty
-func (q *MPMCqsDV) Recv(v *Value) bool {
+func (q *MPMCqsDV[T]) Recv(v *T) bool {
 	for wait := 0; ; spin(&wait) {
 		if q.TryRecv(v) {
 			return true
@@ -86,8 +86,8 @@ func (q *MPMCqsDV) Recv(v *Value) bool {
 }
 
 // TryRecv receives a value from the queue and returns when it is full
-func (q *MPMCqsDV) TryRecv(v *Value) bool {
-	var cell *seqValue
+func (q *MPMCqsDV[T]) TryRecv(v *T) bool {
+	var cell *seqValue[T]
 	pos := atomic.LoadInt64(&q.recvx)
 	for {
 		cell = &q.buffer[pos&q.mask]

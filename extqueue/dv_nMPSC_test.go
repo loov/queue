@@ -8,13 +8,13 @@ import (
 )
 
 func BenchmarkPingPongSPSCns(b *testing.B) {
-	q1, q2 := extqueue.NewSPSCnsDV(), extqueue.NewSPSCnsDV()
+	q1, q2 := extqueue.NewSPSCnsDV[int64](), extqueue.NewSPSCnsDV[int64]()
 	b.ResetTimer()
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
 		for i := 0; i < b.N; i++ {
-			var v extqueue.Value
+			var v int64
 			q1.Send(v)
 			q2.Recv(&v)
 		}
@@ -22,7 +22,7 @@ func BenchmarkPingPongSPSCns(b *testing.B) {
 	}()
 	go func() {
 		for i := 0; i < b.N; i++ {
-			var v extqueue.Value
+			var v int64
 			q1.Recv(&v)
 			q2.Send(v)
 		}
@@ -32,13 +32,13 @@ func BenchmarkPingPongSPSCns(b *testing.B) {
 }
 
 func BenchmarkPingPongMPSCns(b *testing.B) {
-	q1, q2 := extqueue.NewMPSCnsDV(), extqueue.NewMPSCnsDV()
+	q1, q2 := extqueue.NewMPSCnsDV[int64](), extqueue.NewMPSCnsDV[int64]()
 	b.ResetTimer()
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
 		for i := 0; i < b.N; i++ {
-			var v extqueue.Value
+			var v int64
 			q1.Send(v)
 			q2.Recv(&v)
 		}
@@ -46,7 +46,7 @@ func BenchmarkPingPongMPSCns(b *testing.B) {
 	}()
 	go func() {
 		for i := 0; i < b.N; i++ {
-			var v extqueue.Value
+			var v int64
 			q1.Recv(&v)
 			q2.Send(v)
 		}
@@ -56,14 +56,14 @@ func BenchmarkPingPongMPSCns(b *testing.B) {
 }
 
 func BenchmarkPingPongMPSCnsi(b *testing.B) {
-	q1, q2 := extqueue.NewMPSCnsiDV(), extqueue.NewMPSCnsiDV()
+	q1, q2 := extqueue.NewMPSCnsiDV[int64](), extqueue.NewMPSCnsiDV[int64]()
 	b.ResetTimer()
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
-		node := &extqueue.Node{}
+		node := &extqueue.Node[int64]{}
 		for i := 0; i < b.N; i++ {
-			node.Value = extqueue.Value(i)
+			node.Value = int64(i)
 			q1.SendNode(node)
 			node, _ = q2.RecvNode()
 		}

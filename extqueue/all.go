@@ -71,11 +71,11 @@
 //    			4, 1, // 4 producers and 1 consumer
 //    			func(int) {
 //    				for i := 0; i < b.N; i++ {
-//    					q.Send(Value(i))
+//    					q.Send(T(i))
 //    				}
 //    			}, func(int) {
 //    				for i := 0; i < 4*b.N; i++ {
-//    					var v Value
+//    					var v T
 //    					q.Recv(&v)
 //    				}
 //    			})
@@ -91,25 +91,25 @@ import (
 ////go:generate go run all_gen.go -out all_test.go
 
 var All = testsuite.Descs{
-	{"MPMCcGo", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCcGo(s) }},
-	{"MPMCqGo", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCqGo(s) }},
-	{"MPMCqpGo", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCqpGo(s) }},
+	{"MPMCcGo", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCcGo[int64](s) }},
+	{"MPMCqGo", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCqGo[int64](s) }},
+	{"MPMCqpGo", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCqpGo[int64](s) }},
 
-	{"SPSCrMC", testsuite.ParamBatchSizeAndSize, func(bs, s int) testsuite.Queue { return NewSPSCrMC(bs, s) }},
-	{"SPSCrsMC", testsuite.ParamBatchSizeAndSize, func(bs, s int) testsuite.Queue { return NewSPSCrsMC(bs, s) }},
-	{"MPSCrMC", testsuite.ParamBatchSizeAndSize, func(bs, s int) testsuite.Queue { return NewMPSCrMC(bs, s) }},
-	{"MPSCrsMC", testsuite.ParamBatchSizeAndSize, func(bs, s int) testsuite.Queue { return NewMPSCrsMC(bs, s) }},
+	{"SPSCrMC", testsuite.ParamBatchSizeAndSize, func(bs, s int) testsuite.Queue { return NewSPSCrMC[int64](bs, s) }},
+	{"SPSCrsMC", testsuite.ParamBatchSizeAndSize, func(bs, s int) testsuite.Queue { return NewSPSCrsMC[int64](bs, s) }},
+	{"MPSCrMC", testsuite.ParamBatchSizeAndSize, func(bs, s int) testsuite.Queue { return NewMPSCrMC[int64](bs, s) }},
+	{"MPSCrsMC", testsuite.ParamBatchSizeAndSize, func(bs, s int) testsuite.Queue { return NewMPSCrsMC[int64](bs, s) }},
 
-	{"SPSCnsDV", testsuite.ParamNone, func(bs, s int) testsuite.Queue { return NewSPSCnsDV() }},
-	{"MPSCnsDV", testsuite.ParamNone, func(bs, s int) testsuite.Queue { return NewMPSCnsDV() }},
-	{"MPSCnsiDV", testsuite.ParamNone, func(bs, s int) testsuite.Queue { return NewMPSCnsiDV() }},
+	{"SPSCnsDV", testsuite.ParamNone, func(bs, s int) testsuite.Queue { return NewSPSCnsDV[int64]() }},
+	{"MPSCnsDV", testsuite.ParamNone, func(bs, s int) testsuite.Queue { return NewMPSCnsDV[int64]() }},
+	{"MPSCnsiDV", testsuite.ParamNone, func(bs, s int) testsuite.Queue { return NewMPSCnsiDV[int64]() }},
 
-	{"MPMCqsDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCqsDV(s) }},
-	{"MPMCqspDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCqspDV(s) }},
-	{"SPMCqsDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewSPMCqsDV(s) }},
-	{"SPMCqspDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewSPMCqspDV(s) }},
-	{"MPSCqsDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPSCqsDV(s) }},
-	{"MPSCqspDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPSCqspDV(s) }},
-	{"SPSCqsDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewSPSCqsDV(s) }},
-	{"SPSCqspDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewSPSCqspDV(s) }},
+	{"MPMCqsDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCqsDV[int64](s) }},
+	{"MPMCqspDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCqspDV[int64](s) }},
+	{"SPMCqsDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewSPMCqsDV[int64](s) }},
+	{"SPMCqspDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewSPMCqspDV[int64](s) }},
+	{"MPSCqsDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPSCqsDV[int64](s) }},
+	{"MPSCqspDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPSCqspDV[int64](s) }},
+	{"SPSCqsDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewSPSCqsDV[int64](s) }},
+	{"SPSCqspDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewSPSCqspDV[int64](s) }},
 }

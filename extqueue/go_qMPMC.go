@@ -6,12 +6,12 @@ import (
 )
 
 // MPMCqGo is an lock-free MPMC queue based on https://docs.google.com/document/d/1yIAYmbvL3JxOKOjuCyon7JhW4cSv1wy5hC0ApeGMV9s/pub
-type MPMCqGo struct {
+type MPMCqGo[T any] struct {
 	sendx  uint64
 	_      [7]uint64
 	recvx  uint64
 	_      [7]uint64
-	buffer []seqValue32
+	buffer []seqValue32[T]
 
 	mu    sync.Mutex
 	sendq sync.Cond
@@ -21,14 +21,14 @@ type MPMCqGo struct {
 }
 
 // NewMPMCqGo creates a new MPMCqGo queue
-func NewMPMCqGo(size int) *MPMCqGo {
+func NewMPMCqGo[T any](size int) *MPMCqGo[T] {
 	if size < 2 {
 		size = 2
 	}
-	q := &MPMCqGo{
+	q := &MPMCqGo[T]{
 		sendx:  0,
 		recvx:  0,
-		buffer: make([]seqValue32, size),
+		buffer: make([]seqValue32[T], size),
 	}
 	q.sendq.L = &q.mu
 	q.recvq.L = &q.mu
@@ -36,29 +36,29 @@ func NewMPMCqGo(size int) *MPMCqGo {
 }
 
 // Cap returns number of elements this queue can hold before blocking
-func (q *MPMCqGo) Cap() int { return len(q.buffer) }
+func (q *MPMCqGo[T]) Cap() int { return len(q.buffer) }
 
 // MultipleConsumers makes this a MC queue
-func (q *MPMCqGo) MultipleConsumers() {}
+func (q *MPMCqGo[T]) MultipleConsumers() {}
 
 // MultipleProducers makes this a MP queue
-func (q *MPMCqGo) MultipleProducers() {}
+func (q *MPMCqGo[T]) MultipleProducers() {}
 
-func (q *MPMCqGo) cap() uint32 { return uint32(len(q.buffer)) }
+func (q *MPMCqGo[T]) cap() uint32 { return uint32(len(q.buffer)) }
 
 // Send sends a value to the queue and blocks when it is full
-func (q *MPMCqGo) Send(value Value) bool { return q.trySend(&value, true) }
+func (q *MPMCqGo[T]) Send(value T) bool { return q.trySend(&value, true) }
 
 // TrySend tries to send a value to the queue and returns immediately when it is full
-func (q *MPMCqGo) TrySend(value Value) bool { return q.trySend(&value, false) }
+func (q *MPMCqGo[T]) TrySend(value T) bool { return q.trySend(&value, false) }
 
 // Recv receives a value from the queue and blocks when it is empty
-func (q *MPMCqGo) Recv(value *Value) bool { return q.tryRecv(value, true) }
+func (q *MPMCqGo[T]) Recv(value *T) bool { return q.tryRecv(value, true) }
 
 // TryRecv receives a value from the queue and returns when it is empty
-func (q *MPMCqGo) TryRecv(value *Value) bool { return q.tryRecv(value, false) }
+func (q *MPMCqGo[T]) TryRecv(value *T) bool { return q.tryRecv(value, false) }
 
-func (q *MPMCqGo) trySend(value *Value, block bool) bool {
+func (q *MPMCqGo[T]) trySend(value *T, block bool) bool {
 	for loopCount := 0; ; backoff(&loopCount) {
 		x := atomic.LoadUint64(&q.sendx)
 		seq, pos := uint32(x>>32), uint32(x)
@@ -122,8 +122,8 @@ func (q *MPMCqGo) trySend(value *Value, block bool) bool {
 	}
 }
 
-func (q *MPMCqGo) tryRecv(result *Value, block bool) bool {
-	var empty Value
+func (q *MPMCqGo[T]) tryRecv(result *T, block bool) bool {
+	var empty T
 	for loopCount := 0; ; backoff(&loopCount) {
 		// if closed return false
 

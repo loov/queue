@@ -5,33 +5,30 @@ import (
 	"unsafe"
 )
 
-// Value is the data being sent
-type Value = int64
-
 // Node for using intrusive implementations
-type Node struct {
+type Node[T any] struct {
 	next  unsafe.Pointer
-	Value Value
+	Value T
 }
 
-type seqValue struct {
+type seqValue[T any] struct {
 	sequence int64
-	value    Value
+	value    T
 }
-type seqPaddedValue struct {
+
+type seqPaddedValue[T any] struct {
 	sequence int64
-	value    Value
-	_        [8 - 2]int64
+	value    T
+	_        [7]int64
+}
+type seqValue32[T any] struct {
+	sequence uint32
+	value    T
 }
 
-type seqValue32 struct {
+type seqPaddedValue32[T any] struct {
 	sequence uint32
-	value    Value
-}
-
-type seqPaddedValue32 struct {
-	sequence uint32
-	value    Value
+	value    T
 	_        [8 - 2]int32
 }
 
