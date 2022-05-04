@@ -85,31 +85,85 @@
 package extqueue
 
 import (
-	"github.com/loov/queue/testsuite"
+	"github.com/loov/queue/internal/testsuite"
 )
 
 ////go:generate go run all_gen.go -out all_test.go
 
 var All = testsuite.Descs{
-	{"MPMCcGo", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCcGo[int64](s) }},
-	{"MPMCqGo", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCqGo[int64](s) }},
-	{"MPMCqpGo", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCqpGo[int64](s) }},
+	{
+		Name:   "MPMCcGo",
+		Param:  testsuite.ParamSize,
+		Create: func(bs, s int) testsuite.Queue { return NewMPMCcGo[testsuite.Value](s) }},
+	{
+		Name:   "MPMCqGo",
+		Param:  testsuite.ParamSize,
+		Create: func(bs, s int) testsuite.Queue { return NewMPMCqGo[testsuite.Value](s) }},
+	{
+		Name:   "MPMCqpGo",
+		Param:  testsuite.ParamSize,
+		Create: func(bs, s int) testsuite.Queue { return NewMPMCqpGo[testsuite.Value](s) }},
 
-	{"SPSCrMC", testsuite.ParamBatchSizeAndSize, func(bs, s int) testsuite.Queue { return NewSPSCrMC[int64](bs, s) }},
-	{"SPSCrsMC", testsuite.ParamBatchSizeAndSize, func(bs, s int) testsuite.Queue { return NewSPSCrsMC[int64](bs, s) }},
-	{"MPSCrMC", testsuite.ParamBatchSizeAndSize, func(bs, s int) testsuite.Queue { return NewMPSCrMC[int64](bs, s) }},
-	{"MPSCrsMC", testsuite.ParamBatchSizeAndSize, func(bs, s int) testsuite.Queue { return NewMPSCrsMC[int64](bs, s) }},
+	{
+		Name:   "SPSCrMC",
+		Param:  testsuite.ParamBatchSizeAndSize,
+		Create: func(bs, s int) testsuite.Queue { return NewSPSCrMC[testsuite.Value](bs, s) }},
+	{
+		Name:   "SPSCrsMC",
+		Param:  testsuite.ParamBatchSizeAndSize,
+		Create: func(bs, s int) testsuite.Queue { return NewSPSCrsMC[testsuite.Value](bs, s) }},
+	{
+		Name:   "MPSCrMC",
+		Param:  testsuite.ParamBatchSizeAndSize,
+		Create: func(bs, s int) testsuite.Queue { return NewMPSCrMC[testsuite.Value](bs, s) }},
+	{
+		Name:   "MPSCrsMC",
+		Param:  testsuite.ParamBatchSizeAndSize,
+		Create: func(bs, s int) testsuite.Queue { return NewMPSCrsMC[testsuite.Value](bs, s) }},
 
-	{"SPSCnsDV", testsuite.ParamNone, func(bs, s int) testsuite.Queue { return NewSPSCnsDV[int64]() }},
-	{"MPSCnsDV", testsuite.ParamNone, func(bs, s int) testsuite.Queue { return NewMPSCnsDV[int64]() }},
-	{"MPSCnsiDV", testsuite.ParamNone, func(bs, s int) testsuite.Queue { return NewMPSCnsiDV[int64]() }},
+	{
+		Name:   "SPSCnsDV",
+		Param:  testsuite.ParamNone,
+		Create: func(bs, s int) testsuite.Queue { return NewSPSCnsDV[testsuite.Value]() }},
+	{
+		Name:   "MPSCnsDV",
+		Param:  testsuite.ParamNone,
+		Create: func(bs, s int) testsuite.Queue { return NewMPSCnsDV[testsuite.Value]() }},
+	{
+		Name:   "MPSCnsiDV",
+		Param:  testsuite.ParamNone,
+		Create: func(bs, s int) testsuite.Queue { return NewMPSCnsiDV[testsuite.Value]() }},
 
-	{"MPMCqsDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCqsDV[int64](s) }},
-	{"MPMCqspDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPMCqspDV[int64](s) }},
-	{"SPMCqsDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewSPMCqsDV[int64](s) }},
-	{"SPMCqspDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewSPMCqspDV[int64](s) }},
-	{"MPSCqsDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPSCqsDV[int64](s) }},
-	{"MPSCqspDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewMPSCqspDV[int64](s) }},
-	{"SPSCqsDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewSPSCqsDV[int64](s) }},
-	{"SPSCqspDV", testsuite.ParamSize, func(bs, s int) testsuite.Queue { return NewSPSCqspDV[int64](s) }},
+	{
+		Name:   "MPMCqsDV",
+		Param:  testsuite.ParamSize,
+		Create: func(bs, s int) testsuite.Queue { return NewMPMCqsDV[testsuite.Value](s) }},
+	{
+		Name:   "MPMCqspDV",
+		Param:  testsuite.ParamSize,
+		Create: func(bs, s int) testsuite.Queue { return NewMPMCqspDV[testsuite.Value](s) }},
+	{
+		Name:   "SPMCqsDV",
+		Param:  testsuite.ParamSize,
+		Create: func(bs, s int) testsuite.Queue { return NewSPMCqsDV[testsuite.Value](s) }},
+	{
+		Name:   "SPMCqspDV",
+		Param:  testsuite.ParamSize,
+		Create: func(bs, s int) testsuite.Queue { return NewSPMCqspDV[testsuite.Value](s) }},
+	{
+		Name:   "MPSCqsDV",
+		Param:  testsuite.ParamSize,
+		Create: func(bs, s int) testsuite.Queue { return NewMPSCqsDV[testsuite.Value](s) }},
+	{
+		Name:   "MPSCqspDV",
+		Param:  testsuite.ParamSize,
+		Create: func(bs, s int) testsuite.Queue { return NewMPSCqspDV[testsuite.Value](s) }},
+	{
+		Name:   "SPSCqsDV",
+		Param:  testsuite.ParamSize,
+		Create: func(bs, s int) testsuite.Queue { return NewSPSCqsDV[testsuite.Value](s) }},
+	{
+		Name:   "SPSCqspDV",
+		Param:  testsuite.ParamSize,
+		Create: func(bs, s int) testsuite.Queue { return NewSPSCqspDV[testsuite.Value](s) }},
 }

@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/loov/queue/extqueue"
+	"github.com/loov/queue/internal/extqueue"
 )
 
 func BenchmarkPingPongSPSCns(b *testing.B) {
