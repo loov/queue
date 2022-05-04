@@ -1,3 +1,4 @@
+//go:build ignore
 // +build ignore
 
 package main
@@ -124,7 +125,7 @@ import (
 	"testing"
 	"strconv"
 
-	"github.com/loov/queue/testsuite"
+	"loov.dev/queue/internal/testsuite"
 )
 
 {{ range . }}

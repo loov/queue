@@ -85,7 +85,7 @@
 package extqueue
 
 import (
-	"github.com/loov/queue/internal/testsuite"
+	"loov.dev/queue/internal/testsuite"
 )
 
 ////go:generate go run all_gen.go -out all_test.go
