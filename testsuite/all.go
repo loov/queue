@@ -2,7 +2,6 @@ package testsuite
 
 import (
 	"flag"
-	"fmt"
 	"testing"
 	"time"
 )
@@ -35,7 +34,7 @@ var shake = flag.Int("shake", 1, "run tests multiple times")
 func skipRedundant(q Queue, testsize int) bool {
 	if b, ok := q.(Bounded); ok {
 		if b.Cap()*10 < testsize {
-			fmt.Println("skip", b.Cap(), testsize)
+			// fmt.Println("skip", b.Cap(), testsize)
 			return true
 		}
 	}
